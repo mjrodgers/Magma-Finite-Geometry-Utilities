@@ -1,0 +1,10 @@
+{
+	FiniteGeometry
+	{
+		BasicFunctions.m
+		SubsetProcess.m
+		MatrixTools.m
+		ClassificationTools.m
+		FinGeom.m
+	}
+}
