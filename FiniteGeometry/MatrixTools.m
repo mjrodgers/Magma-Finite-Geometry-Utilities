@@ -40,14 +40,17 @@ intrinsic IncidenceMatrix(S::SetEnum, I::Map) -> AlgMatElt, SetEnum
   return IncidenceMatrix(S,I), S;
 end intrinsic;
 
-
+// TODO: there is no reason that we need P1 and P2 to be ordered, they are simply partitions.
+//       we can just order them arbitrarily.
+// TODO: We should check that they actually partition the row/column sets though.
 intrinsic TDColSumMatrix(M::Mtrx,P1::SeqEnum[SetEnum],P2::SeqEnum[SetEnum]) -> Mtrx, Map
 { P1 partitions the rows, P2 partitions the columns, returns column sum matrix }
   R := CoefficientRing(M);
   V := RSpace(R, Nrows(M));
   CSelMat := Matrix(R, Ncols(M), #P2, [<Rep(P2[i]), i, 1> : i in [1..#P2]]);
   CSumMat := Matrix([CharacteristicVector(V,r) : r in P1]);
-  return CSumMat*(M*CSelMat), map< RSpace(R, #P1) -> V | v :-> v*CSumMat>;
+  return CSumMat*(M*CSelMat),
+          hom< RSpace(R, #P1) -> V | [v*CSumMat : v in Basis(RSpace(R, #P1))]>;
 end intrinsic;
 
 

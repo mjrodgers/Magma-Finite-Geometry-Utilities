@@ -2,7 +2,7 @@ freeze;
 // Tools for classifying objects based on isomorphism testing.
 
 
-intrinsic CanonicalVertexSet(S::Set, Gr::Graph) -> SetEnum
+intrinsic CanonicalVertexSet(S::Set, Gr::Grph) -> SetEnum
 { Takes a set S of vertices of a graph Gr, returns a canonically isomorphic set of vertices. }
 require S subset VertexSet(Gr): "S must be a set of vertices of Gr.";
   AssignLabels(~Gr, {@ v : v in S @}, [1 : i in [1..#S]]);
