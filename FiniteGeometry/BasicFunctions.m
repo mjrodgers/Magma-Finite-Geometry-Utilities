@@ -1,5 +1,20 @@
 freeze;
 
+/* -------------------------------------------------------------------------//
+// -------------------------------------------------------------------------//
+  This just provides some useful intrinsic functions I haven't fit into a more well-named collection.
+  ObjectFromFile(fname::MonStgElt)
+    this reads a Magma object from a file, created using the PrintFileMagma(O) command,
+    and returns the object into the currently running magma process.
+    There are a couple of Magma object types that don't write all their data correctly,
+    and they may cause problems (associative arrays being one example).
+  qBinom(n,k,q)
+    returns the q-binomial coefficient (n,k)_q
+  qBinomPoly(n,k)
+    returns the q-binomial coefficient in polynomial form
+// -------------------------------------------------------------------------//
+// -------------------------------------------------------------------------*/
+
 intrinsic ObjectFromFile(fname::MonStgElt) -> Any
 { Reads a file written in Magma format,
 returns and object defined by that code. }
