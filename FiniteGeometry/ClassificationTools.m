@@ -1,5 +1,32 @@
 freeze;
-// Tools for classifying objects based on isomorphism testing.
+
+/* -------------------------------------------------------------------------//
+// -------------------------------------------------------------------------//
+  Provides sone tools for classifying objects based on isomorphism testing.
+
+  CanonicalVertexSet(S::Set, Gr::Grph)
+    if S is a vertex subset of the graph Gr, we use Magma's version of nauty
+    to provide a canonical vertex labeling, which allows us to obtain
+    a canonical vertex set S' associated with S; that is, if S_1 and S_2
+    are vertex sets, then S'_1 = S'_2 if and only if there is exists
+    and automorphism of Gr sending S_1 to S_2.
+  ColumnStabilizer(S::SeqEnum)
+  ColumnStabilizer(S::ModTupFldElt)
+    given a sequence or vector S of length n, return the stabilizer in Sym(n);
+  ColumnStabilizer(M::Matrix)
+    Given an mxn matrix, return the subgroup of Sym(n) obtained from
+    projecting AutomorphismGroup(M) from Sym(m)xSym(n) -> Sym(n).
+    Optional parameter RSTRCT allows us to 'color' rows and columns
+    to give a fixed partition.
+    TODO: RSTRCT is a bad parameter name, need to replace with RowColors / ColumnColors
+  CanonicalSortedMatrix(M)
+    Reorders rows and columns of a matrix in a canonical way.
+  RemoveIsomorphic(MSET)
+  RemoveIsomorphic(~MSET)
+    given a collection of matrices, remove isomorphic copies
+    to obtain a set of distinct representatives.
+// -------------------------------------------------------------------------//
+// -------------------------------------------------------------------------*/
 
 
 intrinsic CanonicalVertexSet(S::Set, Gr::Grph) -> SetEnum
