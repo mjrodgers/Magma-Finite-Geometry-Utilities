@@ -1,8 +1,7 @@
 freeze;
-// Methods for generating subspaces of vector spaces.
-// Will eventually add methods for generating k-spaces,
-// and processes for iterating through these objects.
 
+// Methods for generating sets corresponding to points and lines
+// of a projective space.
 
 intrinsic Points(U::ModTupFld) -> SetEnum[ModTupFldElt]
 { Return the set of normalized vectors in U. }
