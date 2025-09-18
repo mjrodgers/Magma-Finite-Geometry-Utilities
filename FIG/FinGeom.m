@@ -3,6 +3,8 @@ freeze;
 // Methods for generating sets corresponding to points and lines
 // of a projective space.
 
+// Methods for generating sets corresponding to points and lines
+// of a projective space.
 
 intrinsic Points(U::ModTupFld) -> SetEnum[ModTupFldElt]
 { Return the set of normalized vectors in U. }
