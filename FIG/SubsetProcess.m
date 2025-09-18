@@ -24,7 +24,6 @@ freeze;
       allows iteration through all subspaces of a finite vector space U
       having dimension k.
     TODO: For completion, should have a generic version that goes through ALL subspaces.
-    TODO:: Magma has now officially introduced the CreateProcess intrinsic, we can migrate to this (and should).
 // -------------------------------------------------------------------------//
 // -------------------------------------------------------------------------*/
 
@@ -70,7 +69,7 @@ end intrinsic;
 intrinsic SubsetProcess(n::RngIntElt) -> Process
 {Gives a process for iterating through all subsets from a set of size n.}
 tup := <2^n, 0>;
-P := InternalCreateProcess(
+P := CreateProcess(
       "Subsets",
       tup,
       InternalSubsetProcessIsEmpty,
@@ -132,7 +131,7 @@ intrinsic SubsetProcess(n::RngIntElt, k::RngIntElt) -> Process
   P := TransversalProcess(Sym(n), DirectProduct(Sym(k),Sym(n-k)));
   f := func<sigma | {1..k}^(sigma^-1)>;
   info := <P, TransversalProcessNext(P), TransversalProcessRemaining(P), false, f>;
-  P := InternalCreateProcess(
+  P := CreateProcess(
         "kSubsets",
         info,
         InternalkSubsetProcessIsEmpty,
@@ -274,7 +273,7 @@ intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
 
   info := <U, P1, I, f>;
 
-  P := InternalCreateProcess(
+  P := CreateProcess(
         "Subspace",
         info,
         InternalSubspaceProcessIsEmpty,
