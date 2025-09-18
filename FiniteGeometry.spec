@@ -1,5 +1,5 @@
 {
-	FiniteGeometry
+	FIG
 	{
 		BasicFunctions.m
 		SubsetProcess.m

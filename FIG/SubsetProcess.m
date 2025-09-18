@@ -27,6 +27,7 @@ freeze;
 // -------------------------------------------------------------------------//
 // -------------------------------------------------------------------------*/
 
+
 intrinsic IntToSet(n::RngIntElt) -> SetEnum[RngIntElt]
 { Takes an integer, returns support of binary representation as an integer set }
   SET := {Integers()|};
@@ -68,7 +69,7 @@ end intrinsic;
 intrinsic SubsetProcess(n::RngIntElt) -> Process
 {Gives a process for iterating through all subsets from a set of size n.}
 tup := <2^n, 0>;
-P := InternalCreateProcess(
+P := CreateProcess(
       "Subsets",
       tup,
       InternalSubsetProcessIsEmpty,
@@ -93,6 +94,7 @@ intrinsic SubsetProcess(S::SetEnum) -> Process
 end intrinsic;
 
 
+// For subsets of fixed size k
 intrinsic InternalkSubsetProcessIsEmpty(p::Tup) -> BoolElt
 {Returns true iff the transitive group process has passed its last group}
     return p[4];
@@ -129,7 +131,7 @@ intrinsic SubsetProcess(n::RngIntElt, k::RngIntElt) -> Process
   P := TransversalProcess(Sym(n), DirectProduct(Sym(k),Sym(n-k)));
   f := func<sigma | {1..k}^(sigma^-1)>;
   info := <P, TransversalProcessNext(P), TransversalProcessRemaining(P), false, f>;
-  P := InternalCreateProcess(
+  P := CreateProcess(
         "kSubsets",
         info,
         InternalkSubsetProcessIsEmpty,
@@ -154,7 +156,6 @@ intrinsic SubsetProcess(S::SetEnum, k::RngIntElt) -> Process
   requirerange k, 0, #S;
   return SubsetProcess(SetToIndexedSet(S), k);
 end intrinsic;
-
 
 
 // For subspaces:
@@ -186,6 +187,7 @@ function qAry(Q,q)
   return S2;
 end function;
 
+
 function MapFunc(n, q, S)
   F := FiniteField(q);
   k := #S;
@@ -207,11 +209,11 @@ function MapFunc(n, q, S)
 end function;
 
 
-
 intrinsic InternalSubspaceProcessIsEmpty(p::Tup) -> BoolElt
 {Returns true iff the transitive group process has passed its last group}
     return IsEmpty(p[2]);
 end intrinsic;
+
 
 intrinsic InternalNextSubspace(~p::Tup)
 {Moves the subset process tuple p to its next subset}
@@ -235,9 +237,6 @@ intrinsic InternalNextSubspace(~p::Tup)
 end intrinsic;
 
 
-
-
-
 intrinsic InternalExtractSubspace(p::Tup) -> { }
 {Returns the current subset of the transitive group process tuple p}
     error if InternalSubspaceProcessIsEmpty(p), "Process finished";
@@ -251,12 +250,12 @@ intrinsic InternalExtractSubspace(p::Tup) -> { }
     return phi(I[2]);
 end intrinsic;
 
+
 intrinsic InternalExtractSubspaceLabel(p::Tup) -> RngIntElt, SetEnum
 {Returns the index of the current subset, along with the parent set.}
     error if InternalSubspaceProcessIsEmpty(p), "Process finished";
     return p[3];
 end intrinsic;
-
 
 
 intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
@@ -267,7 +266,6 @@ intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
   Fq := CoefficientField(U);
   Fp := BaseField(Fq);
 
-
   P1 := SubsetProcess(n,k);
   S := Sort(SetToIndexedSet(Current(P1)));
   f, M := MapFunc(n,#Fq, S);
@@ -275,7 +273,7 @@ intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
 
   info := <U, P1, I, f>;
 
-  P := InternalCreateProcess(
+  P := CreateProcess(
         "Subspace",
         info,
         InternalSubspaceProcessIsEmpty,

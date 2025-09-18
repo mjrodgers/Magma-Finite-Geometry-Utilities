@@ -3,6 +3,9 @@ freeze;
 // Methods for generating sets corresponding to points and lines
 // of a projective space.
 
+// Methods for generating sets corresponding to points and lines
+// of a projective space.
+
 intrinsic Points(U::ModTupFld) -> SetEnum[ModTupFldElt]
 { Return the set of normalized vectors in U. }
 require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
@@ -11,6 +14,7 @@ require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
   return &join{ {B[i] + u : u in sub<U| {B[r] : r in [i+1..n]}>}
                 : i in [1..n] };
 end intrinsic;
+
 
 intrinsic LineSubs(U::ModTupFld) -> { }
 { Returns the set of 2-dimensional subspaces of U. }
