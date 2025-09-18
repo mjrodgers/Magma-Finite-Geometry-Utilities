@@ -28,8 +28,6 @@ freeze;
 // -------------------------------------------------------------------------*/
 
 
-
-
 // Want 3 possible map types: SxS -> {0,1}, SxS -> {true, false}, (S -> Pow(S) : not implemented)
 intrinsic IncidenceMatrix(S1::SetIndx, S2::SetIndx, I::Map) -> AlgMatElt
 { Returns a symmetric 0-1 matrix indexed by elements of S, incidence determined by I. }
@@ -51,6 +49,7 @@ intrinsic IncidenceMatrix(S1::SetEnum, S2::SetEnum, I::Map) -> AlgMatElt, SetInd
 end intrinsic;
 
 
+// NOTE : we probably don't want to do this as a symmetric matrix (maybe allow as an optional parameter?)
 intrinsic IncidenceMatrix(S::SetIndx, I::Map) -> AlgMatElt
 { Returns a symmetric 0-1 matrix indexed by elements of S, incidence determined by I. }
   truthy := map< Booleans() -> Integers() | x:-> x select 1 else 0>;
@@ -63,11 +62,13 @@ intrinsic IncidenceMatrix(S::SetIndx, I::Map) -> AlgMatElt
   );
 end intrinsic;
 
+
 intrinsic IncidenceMatrix(S::SetEnum, I::Map) -> AlgMatElt, SetEnum
 { Returns a symmetric 0-1 matrix indexed by elements of S, incidence determined by I. }
   S := SetToIndexedSet(S);
   return IncidenceMatrix(S,I), S;
 end intrinsic;
+
 
 // TODO: there is no reason that we need P1 and P2 to be ordered, they are simply partitions.
 //       we can just order them arbitrarily.

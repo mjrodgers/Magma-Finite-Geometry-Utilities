@@ -55,7 +55,7 @@ end intrinsic;
 
 intrinsic ColumnStabilizer(M::Matrix
                     :  RSTRCT := <[1 : i in [1..Nrows(M)]],
-			                            [1 : i in [1..Ncols(M)]]>) -> GrpPerm
+                                  [1 : i in [1..Ncols(M)]]>) -> GrpPerm
 { Takes a matrix with k columns,
 returns the column representation of the
 matrices automorphism group
@@ -66,7 +66,6 @@ matrices automorphism group
     VerticalJoin(Matrix(RNG, [RSTRCT[2]]), M));
   return proj[4](AutomorphismGroup(A));
 end intrinsic;
-
 
 
 /*-------------------------------------------------------------------------
@@ -185,7 +184,7 @@ end function;
  * That can get translated back to an r in [1..#elts],
  * translated again to elts[r]
  */
-intrinsic CanonicalSortedMatrix(M::Mtrx : RowColours := 0, ColColours := 0, Al := "Default") -> GrpPerm
+intrinsic CanonicalSortedMatrix(M::Mtrx : RowColours := 0, ColColours := 0, Al := "Default") -> Mtrx
 {Returns a canonically sorted matrix, according to the CanonicalGraph intrinsic}
   R := BaseRing(Parent(M));
   elts := {R|};
@@ -223,14 +222,8 @@ intrinsic CanonicalSortedMatrix(M::Mtrx : RowColours := 0, ColColours := 0, Al :
 end intrinsic;
 
 
-
-
-
-
 /*-------------------------------------------------------------------------
 ---------------------------------------------------------------------------*/
-
-
 
 
 intrinsic RemoveIsomorphic(~MSEQ::SeqEnum[Mtrx]

@@ -15,6 +15,7 @@ freeze;
 // -------------------------------------------------------------------------//
 // -------------------------------------------------------------------------*/
 
+
 intrinsic ObjectFromFile(fname::MonStgElt) -> Any
 { Reads a file written in Magma format,
 returns and object defined by that code. }

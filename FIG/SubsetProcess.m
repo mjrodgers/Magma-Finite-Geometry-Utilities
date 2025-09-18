@@ -24,8 +24,10 @@ freeze;
       allows iteration through all subspaces of a finite vector space U
       having dimension k.
     TODO: For completion, should have a generic version that goes through ALL subspaces.
+    TODO:: Magma has now officially introduced the CreateProcess intrinsic, we can migrate to this (and should).
 // -------------------------------------------------------------------------//
 // -------------------------------------------------------------------------*/
+
 
 intrinsic IntToSet(n::RngIntElt) -> SetEnum[RngIntElt]
 { Takes an integer, returns support of binary representation as an integer set }
@@ -93,6 +95,7 @@ intrinsic SubsetProcess(S::SetEnum) -> Process
 end intrinsic;
 
 
+// For subsets of fixed size k
 intrinsic InternalkSubsetProcessIsEmpty(p::Tup) -> BoolElt
 {Returns true iff the transitive group process has passed its last group}
     return p[4];
@@ -156,7 +159,6 @@ intrinsic SubsetProcess(S::SetEnum, k::RngIntElt) -> Process
 end intrinsic;
 
 
-
 // For subspaces:
 
 // Takes an integer Q. returns a sequence of Fq elements.
@@ -186,6 +188,7 @@ function qAry(Q,q)
   return S2;
 end function;
 
+
 function MapFunc(n, q, S)
   F := FiniteField(q);
   k := #S;
@@ -207,11 +210,11 @@ function MapFunc(n, q, S)
 end function;
 
 
-
 intrinsic InternalSubspaceProcessIsEmpty(p::Tup) -> BoolElt
 {Returns true iff the transitive group process has passed its last group}
     return IsEmpty(p[2]);
 end intrinsic;
+
 
 intrinsic InternalNextSubspace(~p::Tup)
 {Moves the subset process tuple p to its next subset}
@@ -235,9 +238,6 @@ intrinsic InternalNextSubspace(~p::Tup)
 end intrinsic;
 
 
-
-
-
 intrinsic InternalExtractSubspace(p::Tup) -> { }
 {Returns the current subset of the transitive group process tuple p}
     error if InternalSubspaceProcessIsEmpty(p), "Process finished";
@@ -251,12 +251,12 @@ intrinsic InternalExtractSubspace(p::Tup) -> { }
     return phi(I[2]);
 end intrinsic;
 
+
 intrinsic InternalExtractSubspaceLabel(p::Tup) -> RngIntElt, SetEnum
 {Returns the index of the current subset, along with the parent set.}
     error if InternalSubspaceProcessIsEmpty(p), "Process finished";
     return p[3];
 end intrinsic;
-
 
 
 intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
@@ -266,7 +266,6 @@ intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
   n := Dimension(U);
   Fq := CoefficientField(U);
   Fp := BaseField(Fq);
-
 
   P1 := SubsetProcess(n,k);
   S := Sort(SetToIndexedSet(Current(P1)));
