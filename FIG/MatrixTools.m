@@ -13,9 +13,6 @@ freeze;
     IncidenceMatrix(S::SetIndx, I::Map)
     intrinsic IncidenceMatrix(S::SetEnum, I::Map)
       As above, but we take S1 = S2 = S and return a symmetric matrix.
-      TODO: We should allow different possible map types, for example:
-          S1xS2 -> {0,1}, S1xS2 -> {true, false}, (S1 -> Pow(S2),
-          maybe even S1xS2 -> Integers()
       TODO: We should catch errors arising from unsupported maps
     TDColSumMatrix(M::Mtrx,P1::SeqEnum[SetEnum],P2::SeqEnum[SetEnum])
     TDColSumMatrix(M::Mtrx,P::SeqEnum[SetEnum])
