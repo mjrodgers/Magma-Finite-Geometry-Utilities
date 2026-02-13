@@ -32,9 +32,9 @@ end intrinsic;
 intrinsic qBinom(n::RngIntElt, k::RngIntElt, q::RngIntElt) -> RngIntElt
 { Returns the q-binomial coefficient (n,k)_q }
 requirege q, 1;
-requirege k, 0;
+// requirege k, 0;
 // requirege n, k;
-  if n lt k then
+  if (n lt k) or (k lt 0) then
     return 0;
   else
     N := 1;
