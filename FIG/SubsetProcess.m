@@ -251,7 +251,7 @@ intrinsic InternalExtractSubspace(p::Tup) -> { }
     I := p[3];
     phi := p[4];
     // Can we replace this with `Image`?
-    return sub<p[1] | Rows(phi(I[2])*BasisMatrix(p[1]))>;
+    return Image(phi(I[2])*BasisMatrix(p[1]));
 end intrinsic;
 
 
