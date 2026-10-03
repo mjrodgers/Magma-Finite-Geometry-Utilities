@@ -129,7 +129,7 @@ intrinsic SubsetProcess(n::RngIntElt, k::RngIntElt) -> Process
 {Gives a process for iterating through all subsets from a set of size n having size k.}
   requirerange k, 0, n;
   if (k eq 0) or (k eq n) then
-    TransversalProcess(Sym(n), Sym(n));
+    P := TransversalProcess(Sym(n), Sym(n));
   else
     P := TransversalProcess(Sym(n), DirectProduct(Sym(k),Sym(n-k)));
   end if;
