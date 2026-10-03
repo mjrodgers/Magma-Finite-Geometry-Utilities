@@ -209,6 +209,8 @@ function MapFunc(n, q, S)
     return K;
   end function;
 
+  print "MapFunc using (k,n) = (", k, n,  ")";
+
   return f, q^(#positions)-1;
 end function;
 
@@ -272,7 +274,7 @@ intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
 
   P1 := SubsetProcess(n,k);
   S := Sort(SetToIndexedSet(Current(P1)));
-  f, M := MapFunc(n,#Fq, S);
+  f, M := MapFunc(n, #Fq, S);
   I := <S, 0, M>;
 
   info := <U, P1, I, f>;
