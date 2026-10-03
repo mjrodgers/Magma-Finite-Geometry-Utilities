@@ -290,7 +290,7 @@ intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
 end intrinsic;
 
 // Version to just return matrices
-intrinsic InternalSubspaceProcessMatIsEmpty(p::Tup) -> BoolElt
+intrinsic InternalSubspaceMatProcessIsEmpty(p::Tup) -> BoolElt
 {Returns true iff the transitive group process has passed its last group}
     return IsEmpty(p[2]);
 end intrinsic;
