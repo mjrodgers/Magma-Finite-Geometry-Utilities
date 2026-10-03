@@ -250,7 +250,7 @@ intrinsic InternalExtractSubspace(p::Tup) -> { }
     // q := #CoefficientField(U);
     I := p[3];
     phi := p[4];
-
+    print p[1], phi(I[2]);
     return sub<p[1] | {p[1]!r : r in Rows(phi(I[2]))}>;
 end intrinsic;
 
