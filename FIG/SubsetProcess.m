@@ -251,7 +251,7 @@ intrinsic InternalExtractSubspace(p::Tup) -> { }
     I := p[3];
     phi := p[4];
 
-    return sub<U | Rows(phi(I[2]))>;
+    return sub<p[1] | Rows(phi(I[2]))>;
 end intrinsic;
 
 
