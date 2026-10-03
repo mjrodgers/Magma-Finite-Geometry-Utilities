@@ -209,8 +209,6 @@ function MapFunc(n, q, S)
     return K;
   end function;
 
-  print "MapFunc using (k,n) = (", k, n,  ")";
-
   return f, q^(#positions)-1;
 end function;
 
@@ -252,8 +250,8 @@ intrinsic InternalExtractSubspace(p::Tup) -> { }
     // q := #CoefficientField(U);
     I := p[3];
     phi := p[4];
-    print p[1], phi(I[2]);
-    return sub<p[1] | {p[1]!r : r in Rows(phi(I[2]))}>;
+    // Can we replace this with `Image`?
+    return sub<p[1] | Rows(phi(I[2])*BasisMatrix(p[1]))>;
 end intrinsic;
 
 
@@ -330,7 +328,7 @@ intrinsic InternalExtractSubspaceMat(p::Tup) -> { }
     I := p[3];
     phi := p[4];
 
-    return phi(I[2]);
+    return phi(I[2])*BasisMatrix(p[1]);
 end intrinsic;
 
 
