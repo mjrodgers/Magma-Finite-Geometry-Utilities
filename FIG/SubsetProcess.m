@@ -222,9 +222,9 @@ function qAry(Q,q)
 end function;
 
 
-function MapFunc(F, n, k, S, u)
+function MapFunc(F, n, k, S, values)
   mat := ZeroMatrix(F, k, n);
-  values := qAry(F, u);
+  // values := qAry(F, u);
   pos := 1;
   for i in [1..k] do
     mat[i, S[i]] := 1;
