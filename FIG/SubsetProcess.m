@@ -424,7 +424,7 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
         InternalNextSubspaceMatSub,
         InternalExtractSubspaceMatSub,
         InternalExtractSubspaceMatSubLabel
-  )
+  );
 
   return P;
 end intrinsic;
