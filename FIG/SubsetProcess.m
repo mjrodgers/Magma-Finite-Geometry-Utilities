@@ -94,67 +94,100 @@ intrinsic SubsetProcess(S::SetEnum) -> Process
 end intrinsic;
 
 
+
+
 // For subsets of fixed size k
 intrinsic InternalkSubsetProcessIsEmpty(p::Tup) -> BoolElt
 {Returns true iff the transitive group process has passed its last group}
-    return p[4];
+    // n, k, state := Explode(p);
+    return p[3][1] gt p[1]-p[2]+1;
 end intrinsic;
 
 intrinsic InternalNextkSubset(~p::Tup)
 {Moves the subset process tuple p to its next subset}
-  error if InternalkSubsetProcessIsEmpty(p), "Process finished";
-  if p[3] le 0 then
-    p[4] := true;
-  else
-    p[2] := TransversalProcessNext(p[1]);
-    p[3] := TransversalProcessRemaining(p[1]);
-  end if;
+    error if InternalkSubsetProcessIsEmpty(p), "Process finished";
+    // n, k, state := Explode(p);
+    for i in [p[2]..1 by -1] do
+        p[3][i] +:= 1;
+        if p[3][1] gt (p[1]-p[2]+i) then
+            continue;
+        end if;
+        for j in [i+1..p[2]] do
+            p[3][j] := p[3][j-1] +1;
+        end for;
+        break;
+    end for;
 end intrinsic;
 
 intrinsic InternalExtractkSubset(p::Tup) -> { }
 {Returns the current subset of the transitive group process tuple p}
     error if InternalkSubsetProcessIsEmpty(p), "Process finished";
-    return (p[5])(p[2]);
+    return IndexedSet(p[3]);
 end intrinsic;
 
-intrinsic InternalExtractkSubsetLabel(p::Tup) -> RngIntElt, SetEnum
-{Returns the index of the current subset, along with the parent set.}
+intrinsic InternalExtractkSubsetLabel(p::Tup) -> RngIntElt
+{Returns the index of the current subset.}
     error if InternalkSubsetProcessIsEmpty(p), "Process finished";
-    return p[2];
+    if IsOne(p[1]) then
+      return p[3][1];
+    end if;
+    r := Binomial(p[1], p[2]);
+    i := 1;
+    while i le k do
+        r -:= Binomial(p[1] - p[3][i], p[2]-i+1);
+        i +:= 1;
+        if p[2]-i+1 eq p[1]-p[3][i-1] then
+            return r;
+        end if;
+    end while;
+    return r;
 end intrinsic;
 
 // TODO: should create simple workarounds when k=0 or k=n.
+// TODO: option for indexed set
 // This can probably be modified to be much more efficient by avoiding the use of TransversalProcess
 intrinsic SubsetProcess(n::RngIntElt, k::RngIntElt) -> Process
 {Gives a process for iterating through all subsets from a set of size n having size k.}
   requirerange k, 0, n;
-  if (k eq 0) or (k eq n) then
-    P := TransversalProcess(Sym(n), Sym(n));
-  else
-    P := TransversalProcess(Sym(n), DirectProduct(Sym(k),Sym(n-k)));
-  end if;
-  f := func<sigma | {1..k}^(sigma^-1)>;
-  info := <P, TransversalProcessNext(P), TransversalProcessRemaining(P), false, f>;
-  P := CreateProcess(
-        "kSubsets",
-        info,
-        InternalkSubsetProcessIsEmpty,
-        InternalNextkSubset,
-        InternalExtractkSubset,
-        InternalExtractkSubsetLabel
-      );
 
-  return P;
+    if k eq 0 then
+        return CreateProcess([{Integers()| }]);
+    elif k eq n then
+        return CreateProcess([{i : i in [1..n]}]);
+    end if;
+
+    state := [Min(k-1, i) for i in [1..k]];
+    info := <n, k, state>;
+
+    // if (k eq 0) or (k eq n) then
+    //   P := TransversalProcess(Sym(n), Sym(n));
+    // else
+    //   P := TransversalProcess(Sym(n), DirectProduct(Sym(k),Sym(n-k)));
+    // end if;
+    // f := func<sigma | {1..k}^(sigma^-1)>;
+    // info := <P, TransversalProcessNext(P), TransversalProcessRemaining(P), false, f>;
+    P := CreateProcess(
+          "kSubsets",
+          info,
+          InternalkSubsetProcessIsEmpty,
+          InternalNextkSubset,
+          InternalExtractkSubset,
+          InternalExtractkSubsetLabel
+        );
+
+    return P;
 end intrinsic;
 
+// TODO this should return an indexed set; but the `SetEnum` version should not.
 intrinsic SubsetProcess(S::SetIndx, k::RngIntElt) -> Process
 {Gives a process for iterating through all subsets of S.}
   requirerange k, 0, #S;
-  P := SubsetProcess(#S,k);
+  P := SubsetProcess(#S, k);
   f := func<s | {S[i] : i in s} >;
   return ModifyProcess(P, f);
 end intrinsic;
 
+// TODO is there a way to do this without converting to an indexed set?
 intrinsic SubsetProcess(S::SetEnum, k::RngIntElt) -> Process
 {Gives a process for iterating through all subsets of S.}
   requirerange k, 0, #S;
@@ -270,8 +303,10 @@ intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
   Fq := CoefficientField(U);
   Fp := BaseField(Fq);
 
+  // TODO turn this into an ordered tuple process
   P1 := SubsetProcess(n,k);
   S := Sort(SetToIndexedSet(Current(P1)));
+
   f, M := MapFunc(n, #Fq, S);
   I := <S, 0, M>;
 
