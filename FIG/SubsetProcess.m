@@ -107,9 +107,10 @@ intrinsic InternalNextkSubset(~p::Tup)
 {Moves the subset process tuple p to its next subset}
     error if InternalkSubsetProcessIsEmpty(p), "Process finished";
     // n, k, state := Explode(p);
+    b := p[1]-p[2];
     for i in [p[2]..1 by -1] do
         p[3][i] +:= 1;
-        if p[3][1] gt (p[1]-p[2]+i) then
+        if p[3][1] gt (b+i) then
             continue;
         end if;
         for j in [i+1..p[2]] do
@@ -143,9 +144,9 @@ intrinsic InternalExtractkSubsetLabel(p::Tup) -> RngIntElt
     return r;
 end intrinsic;
 
-// TODO: should create simple workarounds when k=0 or k=n.
+
 // TODO: option for indexed set
-// This can probably be modified to be much more efficient by avoiding the use of TransversalProcess
+// This is way slow for <n,k> = <20,10> compared to calling Subsets...
 intrinsic SubsetProcess(n::RngIntElt, k::RngIntElt) -> Process
 {Gives a process for iterating through all subsets from a set of size n having size k.}
   requirerange k, 0, n;
@@ -159,13 +160,6 @@ intrinsic SubsetProcess(n::RngIntElt, k::RngIntElt) -> Process
     state := [Min(k-1, i) for i in [1..k]];
     info := <n, k, state>;
 
-    // if (k eq 0) or (k eq n) then
-    //   P := TransversalProcess(Sym(n), Sym(n));
-    // else
-    //   P := TransversalProcess(Sym(n), DirectProduct(Sym(k),Sym(n-k)));
-    // end if;
-    // f := func<sigma | {1..k}^(sigma^-1)>;
-    // info := <P, TransversalProcessNext(P), TransversalProcessRemaining(P), false, f>;
     P := CreateProcess(
           "kSubsets",
           info,
@@ -177,6 +171,9 @@ intrinsic SubsetProcess(n::RngIntElt, k::RngIntElt) -> Process
 
     return P;
 end intrinsic;
+
+
+
 
 // TODO this should return an indexed set; but the `SetEnum` version should not.
 intrinsic SubsetProcess(S::SetIndx, k::RngIntElt) -> Process
@@ -225,24 +222,20 @@ function qAry(Q,q)
 end function;
 
 
-function MapFunc(n, q, S)
-  F := FiniteField(q);
-  k := #S;
-  positions := [ [i,j] : i in [1..k], j in [1..n] | j gt S[i] and not j in S];
-  function f( u)
-    u := qAry(u, q);
-    u cat:= [0 : i in [1..#positions - #u]];
-    K := Matrix(F, k, n, [<i,j, x >
-              where i,j is Explode(positions[c])
-                where x is u[c] : c in [1..#positions]]);
-    for c in [1..k] do
-        K[c,S[c]] := 1;
+function MapFunc(F, n, k, S, u)
+  mat := ZeroMatrix(F, k, n);
+  values := qAry(F, u);
+  pos := 1;
+  for i in [1..k] do
+    mat[i, S[i]] := 1;
+    for j in [S[i]+1..n] do
+      if j notin S then
+        mat[i,j] := values[pos];
+        pos +:=1;
+      end if;
     end for;
-
-    return K;
-  end function;
-
-  return f, q^(#positions)-1;
+  end for;
+  return mat;
 end function;
 
 
@@ -303,7 +296,7 @@ intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
   Fq := CoefficientField(U);
   Fp := BaseField(Fq);
 
-  // TODO turn this into an ordered tuple process
+  // TODO make this better
   P1 := SubsetProcess(n,k);
   S := Sort(SetToIndexedSet(Current(P1)));
 
@@ -324,79 +317,114 @@ intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
   return P;
 end intrinsic;
 
-// Version to just return matrices
-intrinsic InternalSubspaceMatProcessIsEmpty(p::Tup) -> BoolElt
-{Returns true iff the transitive group process has passed its last group}
-    return IsEmpty(p[2]);
+
+
+
+
+//
+//
+// // Version to just return matrices
+// intrinsic InternalSubspaceMatProcessIsEmpty(p::Tup) -> BoolElt
+// {Returns true iff the transitive group process has passed its last group}
+//     return IsEmpty(p[2]);
+// end intrinsic;
+//
+//
+// intrinsic InternalNextSubspaceMat(~p::Tup)
+// {Moves the subset process tuple p to its next subset}
+//   error if InternalSubspaceMatProcessIsEmpty(p), "Process finished";
+//   if p[3][2] ge p[3][3] then
+//     Advance(~(p[2]));
+//     if IsEmpty(p[2]) then
+//       p[3][1] := {@ @};
+//       p[3][2] := 0;
+//       p[3][3] := -1;
+//     else
+//       p[3][1] := Sort(SetToIndexedSet(Current(p[2])));
+//       p[3][2] := 0;
+//       f, M := MapFunc(Dimension(p[1]), #CoefficientField(p[1]), p[3][1]);
+//       p[3][3] := M;
+//       p[4] := f;
+//     end if;
+//   else
+//     p[3][2] +:= 1;
+//   end if;
+// end intrinsic;
+//
+//
+// intrinsic InternalExtractSubspaceMat(p::Tup) -> { }
+// {Returns the current subspace of the transitive group process tuple p}
+//     error if InternalSubspaceMatProcessIsEmpty(p), "Process finished";
+//     // I will contain ordered pair: k-set, and an integer
+//     // Do we need to coerce the subspace to be in U?
+//     // U := p[1];
+//     // q := #CoefficientField(U);
+//     I := p[3];
+//     phi := p[4];
+//
+//     return phi(I[2]);
+// end intrinsic;
+//
+//
+// intrinsic InternalExtractSubspaceMatLabel(p::Tup) -> RngIntElt, SetEnum
+// {Returns the index of the current subset, along with the parent set.}
+//     error if InternalSubspaceMatProcessIsEmpty(p), "Process finished";
+//     return p[3];
+// end intrinsic;
+
+
+
+intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
+{Gives a process for iterating through all subspaces of fixed dimension k from U.}
+  requirerange k, 0, n;
+  pivots := [Sort(SetToindexedSet(S)) : S in Subsets(n,k)];
+  return ConcatenateProcesses([SubspaceMatSubProcess(Fq, n, k, S) : S in pivots]);
 end intrinsic;
 
 
-intrinsic InternalNextSubspaceMat(~p::Tup)
+
+
+
+// Iterates over echelon kxn matrices over Fq with fixed pivot columns S.
+intrinsic InternalSubspaceMatSubProcessIsEmpty(p::Tup) -> BoolElt
+{Returns true iff the transitive group process has passed its last group}
+    return IsEmpty(p[5]);
+end intrinsic;
+
+intrinsic InternalNextSubspaceMatSub(~p::Tup)
 {Moves the subset process tuple p to its next subset}
   error if InternalSubspaceMatProcessIsEmpty(p), "Process finished";
-  if p[3][2] ge p[3][3] then
-    Advance(~(p[2]));
-    if IsEmpty(p[2]) then
-      p[3][1] := {@ @};
-      p[3][2] := 0;
-      p[3][3] := -1;
-    else
-      p[3][1] := Sort(SetToIndexedSet(Current(p[2])));
-      p[3][2] := 0;
-      f, M := MapFunc(Dimension(p[1]), #CoefficientField(p[1]), p[3][1]);
-      p[3][3] := M;
-      p[4] := f;
-    end if;
-  else
-    p[3][2] +:= 1;
-  end if;
+  Advance(~(p[5]));
 end intrinsic;
 
-
-intrinsic InternalExtractSubspaceMat(p::Tup) -> { }
+intrinsic InternalExtractSubspaceMatSub(p::Tup) -> { }
 {Returns the current subspace of the transitive group process tuple p}
     error if InternalSubspaceMatProcessIsEmpty(p), "Process finished";
-    // I will contain ordered pair: k-set, and an integer
-    // Do we need to coerce the subspace to be in U?
-    // U := p[1];
-    // q := #CoefficientField(U);
-    I := p[3];
-    phi := p[4];
-
-    return phi(I[2])*BasisMatrix(p[1]);
+    // p := <Fq, n, k,S, Fq_tup_iter>;
+    return MapFunc(p[1], p[2], p[3], p[4], Current(p[5]));
 end intrinsic;
 
-
-intrinsic InternalExtractSubspaceMatLabel(p::Tup) -> RngIntElt, SetEnum
+// TODO : Don't know why/if we need this, but this is obv not implemented
+intrinsic InternalExtractSubspaceMatSubLabel(p::Tup) -> RngIntElt
 {Returns the index of the current subset, along with the parent set.}
     error if InternalSubspaceMatProcessIsEmpty(p), "Process finished";
-    return p[3];
+    return 0;
 end intrinsic;
 
-
-intrinsic SubspaceMatProcess(U::ModTupFld, k::RngIntElt) -> Process
-{Gives a process for iterating through all subspaces of fixed dimension k from U.}
-  require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
-  requirerange k, 0, Dimension(U);
-  n := Dimension(U);
-  Fq := CoefficientField(U);
-  Fp := BaseField(Fq);
-
-  P1 := SubsetProcess(n,k);
-  S := Sort(SetToIndexedSet(Current(P1)));
-  f, M := MapFunc(n,#Fq, S);
-  I := <S, 0, M>;
-
-  info := <U, P1, I, f>;
+intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIndx)
+{Generate row reduced echelon matrices with fixed set S of pivots.}
+  npos := n*k - Binom(k,2) - &+(S);
+  Fq_tup_iter := StitchProcesses([CreateProcess(Set(Fq)) : i in [1..npos]]);
+  info := <Fq, n, k, S, Fq_tup_iter>;
 
   P := CreateProcess(
-        "Subspace Matrices",
+        "Subspace Matrices (subprocess)",
         info,
-        InternalSubspaceMatProcessIsEmpty,
-        InternalNextSubspaceMat,
-        InternalExtractSubspaceMat,
-        InternalExtractSubspaceMatLabel
-      );
+        InternalSubspaceMatSubProcessIsEmpty,
+        InternalNextSubspaceMatSub,
+        InternalExtractSubspaceMatSub,
+        InternalExtractSubspaceMatSubLabel
+  )
 
   return P;
 end intrinsic;
