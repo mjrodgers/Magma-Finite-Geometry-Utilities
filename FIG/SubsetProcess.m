@@ -134,7 +134,7 @@ intrinsic InternalExtractkSubsetLabel(p::Tup) -> RngIntElt
     end if;
     r := Binomial(p[1], p[2]);
     i := 1;
-    while i le k do
+    while i le p[2] do
         r -:= Binomial(p[1] - p[3][i], p[2]-i+1);
         i +:= 1;
         if p[2]-i+1 eq p[1]-p[3][i-1] then
