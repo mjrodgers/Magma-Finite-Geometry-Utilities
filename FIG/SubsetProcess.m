@@ -377,6 +377,7 @@ end intrinsic;
 intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
 {Gives a process for iterating through all subspaces of fixed dimension k from U.}
   requirerange k, 0, n;
+  // pivots := SubsetProcess(n,k);
   pivots := [Sort(SetToIndexedSet(S)) : S in Subsets({1..n},k)];
   return ConcatenateProcesses([SubspaceMatSubProcess(Fq, n, k, S) : S in pivots]);
 end intrinsic;
@@ -414,7 +415,8 @@ end intrinsic;
 intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIndx) -> Process
 {Generate row reduced echelon matrices with fixed set S of pivots.}
   npos := n*k - Binomial(k,2) - &+(S);
-  Fq_tup_iter := StitchProcesses([CreateProcess(Set(Fq)) : i in [1..npos]]);
+  Fq_elts := [a : a in Fq];
+  Fq_tup_iter := StitchProcesses([CreateProcess(Fq_elts) : i in [1..npos]]);
   info := <Fq, n, k, S, Fq_tup_iter>;
 
   P := CreateProcess(
