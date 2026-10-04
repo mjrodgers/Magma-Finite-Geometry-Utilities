@@ -411,7 +411,7 @@ intrinsic InternalExtractSubspaceMatSubLabel(p::Tup) -> RngIntElt
     return 0;
 end intrinsic;
 
-intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIndx)
+intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIndx) -> Process
 {Generate row reduced echelon matrices with fixed set S of pivots.}
   npos := n*k - Binom(k,2) - &+(S);
   Fq_tup_iter := StitchProcesses([CreateProcess(Set(Fq)) : i in [1..npos]]);
