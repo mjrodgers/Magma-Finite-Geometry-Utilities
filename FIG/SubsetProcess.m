@@ -377,7 +377,7 @@ end intrinsic;
 intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
 {Gives a process for iterating through all subspaces of fixed dimension k from U.}
   requirerange k, 0, n;
-  pivots := [Sort(SetToindexedSet(S)) : S in Subsets(n,k)];
+  pivots := [Sort(SetToIndexedSet(S)) : S in Subsets(n,k)];
   return ConcatenateProcesses([SubspaceMatSubProcess(Fq, n, k, S) : S in pivots]);
 end intrinsic;
 
