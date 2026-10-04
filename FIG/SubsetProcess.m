@@ -393,13 +393,13 @@ end intrinsic;
 
 intrinsic InternalNextSubspaceMatSub(~p::Tup)
 {Moves the subset process tuple p to its next subset}
-  error if InternalSubspaceMatProcessIsEmpty(p), "Process finished";
+  error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
   Advance(~(p[5]));
 end intrinsic;
 
 intrinsic InternalExtractSubspaceMatSub(p::Tup) -> { }
 {Returns the current subspace of the transitive group process tuple p}
-    error if InternalSubspaceMatProcessIsEmpty(p), "Process finished";
+    error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
     // p := <Fq, n, k,S, Fq_tup_iter>;
     return MapFunc(p[1], p[2], p[3], p[4], Current(p[5]));
 end intrinsic;
@@ -407,7 +407,7 @@ end intrinsic;
 // TODO : Don't know why/if we need this, but this is obv not implemented
 intrinsic InternalExtractSubspaceMatSubLabel(p::Tup) -> RngIntElt
 {Returns the index of the current subset, along with the parent set.}
-    error if InternalSubspaceMatProcessIsEmpty(p), "Process finished";
+    error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
     return 0;
 end intrinsic;
 
