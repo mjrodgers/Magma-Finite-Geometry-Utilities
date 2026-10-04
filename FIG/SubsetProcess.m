@@ -157,7 +157,7 @@ intrinsic SubsetProcess(n::RngIntElt, k::RngIntElt) -> Process
         return CreateProcess([{i : i in [1..n]}]);
     end if;
 
-    state := [Min(k-1, i) for i in [1..k]];
+    state := [Min(k-1, i) : i in [1..k]];
     info := <n, k, state>;
 
     P := CreateProcess(
