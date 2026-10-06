@@ -241,32 +241,6 @@ function MapFunc(F, n, k, S, values)
   return mat;
 end function;
 
-function _create_positions(n, k, S)
-  return [<i,j> : j in [S[i]+1..n], i in [1..k] | j notin S];
-end function;
-
-procedure _update_Fq_matrix(~M, pos, ~flag)
-  F := CoefficientField(M);
-  z, o, alpha := Zero(F), One(F), PrimitiveElement(F);
-  for p in [#pos..1 by -1] do
-    i, j := Explode(pos[p]);
-    if IsZero(M[i,j]) then
-      M[i,j] := o;
-      break;
-    end if;
-    M[i,j] *:= alpha;
-    if IsOne(M[i,j]) then
-      if i eq 1 then
-        flag := true;
-        break;
-      end if;
-      M[i,j] := z;
-      continue;
-    else
-      break;
-    end if;
-  end for;
-end procedure;
 
 
 intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
@@ -295,42 +269,115 @@ end intrinsic;
 
 
 
-//
-//
-// // Iterates over echelon kxn matrices over Fq with fixed pivot columns S.
-// intrinsic InternalSubspaceMatSubProcessIsEmpty(p::Tup) -> BoolElt
-// {Returns true iff the transitive group process has passed its last group}
-//     return IsEmpty(p[5]);
-// end intrinsic;
-//
-// intrinsic InternalNextSubspaceMatSub(~p::Tup)
-// {Moves the subset process tuple p to its next subset}
-//   error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
-//   Advance(~(p[5]));
-// end intrinsic;
-//
-// intrinsic InternalExtractSubspaceMatSub(p::Tup) -> { }
-// {Returns the current subspace of the transitive group process tuple p}
-//     error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
-//     // p := <Fq, n, k,S, Fq_tup_iter>;
-//     return MapFunc(p[1], p[2], p[3], p[4], Current(p[5]));
-// end intrinsic;
-//
-// // TODO : Don't know why/if we need this, but this is obv not implemented
-// intrinsic InternalExtractSubspaceMatSubLabel(p::Tup) -> RngIntElt
-// {Returns the index of the current subset, along with the parent set.}
-//     error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
-//     return 0;
-// end intrinsic;
+function _Fq_cart_product_process_IsEmpty(p)
+  return p[3];
+end function;
+
+
+// Free positions for echelon kxn matrix with pivots given by S.
+function _create_positions(n, k, S)
+  return [<i,j> : j in [S[i]+1..n], i in [1..k] | j notin S];
+end function;
+
+// procedure _update_Fq_matrix(~M, pos, ~flag)
+procedure _update_Fq_matrix(~p)
+  F := CoefficientField(p[1]);
+  z, o, alpha := Zero(F), One(F), PrimitiveElement(F);
+  for pos in [#p[2]..1 by -1] do
+    i, j := Explode(p[2][pos]);
+    if IsZero(p[1][i,j]) then
+      p[1][i,j] := o;
+      break;
+    end if;
+    p[1][i,j] *:= alpha;
+    if IsOne(M[i,j]) then
+      if i eq 1 then
+        p[3] := true;
+        break;
+      end if;
+      p[1][i,j] := z;
+      continue;
+    end if;
+    break;
+  end for;
+end procedure;
+
+// procedure _update_Fq_matrix(~M, pos, ~flag)
+procedure _update_Fp_matrix(~p)
+  F := CoefficientField(p[1]);
+  z, o, alpha := Zero(F), One(F);
+  for pos in [#p[2]..1 by -1] do
+    i, j := Explode(p[2][pos]);
+    if IsZero(p[1][i,j]) then
+      if i eq 1 then
+        p[3] := true;
+        break;
+      end if;
+      continue;
+    end if;
+    break;
+  end for;
+end procedure;
+
+function _Fq_echelon_subprocess_Extract(p)
+  return p[1];
+end function;
+
+function _Fp_echelon_subprocess_ExtractLabel(p)
+  label := 1;
+  pow := 1;
+  q := #CoefficientField(p[1]);
+  for pos in [#p[2]..1 by -1] do
+    i, j := Explode(p[2][pos]);
+    if not IsZero(p[1][i,j]) then
+      label +:= pow * Integers(p[1][i,j]);
+    end if;
+    pow *:= q;
+  end for;
+  return label;
+end function;
+
+function _Fq_echelon_subprocess_ExtractLabel(p)
+  label := 1;
+  pow := 1;
+  q := #CoefficientField(p[1]);
+  for pos in [#p[2]..1 by -1] do
+    i, j := Explode(p[2][pos]);
+    if not IsZero(p[1][i,j]) then
+      label +:= pow * (1+Log(p[1][i,j]));
+    end if;
+    pow *:= q;
+  end for;
+  return label;
+end function;
+
 
 intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIndx) -> Process
 {Generate row reduced echelon matrices with fixed set S of pivots.}
-  npos := n*k - Binomial(k,2) - &+(S);
-  f := func<u | MapFunc(Fq, n, k, S, u)>;
-  // P := CreateProcess([v : v in VectorSpace(Fq, npos)]);
-  // P := CreateProcess([t : t in CartesianPower(Fq, npos)]);
-  P := FqCartesianProductProcess(Fq, npos);
-  return ModifyProcess(P, f);
+  // npos := n*k - Binomial(k,2) - &+(S);
+  pos := _create_positions(n,k,S);
+  M := ZeroMatrix(Fq, n, k);
+  for i in [1..k] do
+    M[i, S[i]] := One(Fq);
+  end for;
+  info := <M, pos, false>;
+
+  if IsPrimeField(Fq) then
+    return CreateProcess(
+              "Echelon Matrices",
+              _Fq_echelon_subprocess_IsEmpty,
+              _update_Fp_matrix,
+              _Fq_echelon_subprocess_Extract,
+              _Fp_echelon_subprocess_ExtractLabel
+    )
+  end if;
+  return CreateProcess(
+            "Echelon Matrices",
+            _Fq_echelon_subprocess_IsEmpty,
+            _update_Fq_matrix,
+            _Fq_echelon_subprocess_Extract,
+            _Fq_echelon_subprocess_ExtractLabel
+  )
 end intrinsic;
 
 // TODO : do PointIterator that just generates normalized vectors
@@ -383,6 +430,19 @@ function _Fq_cart_product_process_Extract(p)
   return p[2];
 end function;
 
+function _Fp_cart_product_process_ExtractLabel(p)
+  label := 1;
+  pow := 1;
+  q := #p[1];
+  for i in [#p[2]..1 by -1] do
+    if not IsZero(p[2][i]) then
+      label +:= pow * Integers(p[2][i]);
+    end if;
+    pow *:= q;
+  end for;
+  return label;
+end function;
+
 function _Fq_cart_product_process_ExtractLabel(p)
   label := 1;
   pow := 1;
@@ -413,7 +473,7 @@ intrinsic FqCartesianProductProcess(F::FldFin, k::RngIntElt) -> Process
           _Fq_cart_product_process_IsEmpty,
           _Fp_cart_product_process_Next,
           _Fq_cart_product_process_Extract,
-          _Fq_cart_product_process_ExtractLabel
+          _Fp_cart_product_process_ExtractLabel
     );
   end if;
   P := CreateProcess(
