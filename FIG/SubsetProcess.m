@@ -241,8 +241,32 @@ function MapFunc(F, n, k, S, values)
   return mat;
 end function;
 
-// function _create_positions(n, k, S)
-//   return [<i,j> : i in [1..k], j]
+function _create_positions(n, k, S)
+  return [<i,j> : i in [1..k], j in [S[i]+1..n] | j notin S];
+end function;
+
+procedure _update_Fq_matrix(~M, pos, ~flag)
+  F := CoefficientField(M);
+  z, o, alpha := Zero(F), One(F), PrimitiveElement(F);
+  for p in [#pos..1 by -1] do
+    i, j := Explode(pos[p]);
+    if IsZero(M[i,j]) then
+      M[i,j] := o;
+      break;
+    end if;
+    M[i,j] *:= alpha;
+    if IsOne(M[i,j]) then
+      if i eq 1 then
+        flag := true;
+        break;
+      end if;
+      M[i,j] := z;
+      continue;
+    else
+      break;
+    end if;
+  end for;
+end procedure;
 
 
 intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
@@ -303,7 +327,8 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
 {Generate row reduced echelon matrices with fixed set S of pivots.}
   npos := n*k - Binomial(k,2) - &+(S);
   f := func<u | MapFunc(Fq, n, k, S, u)>;
-  P := CreateProcess([t : t in CartesianPower(Fq, npos)]);
+  P := CreateProcess([v : v in VectorSpace(Fq, npos)]);
+  // P := CreateProcess([t : t in CartesianPower(Fq, npos)]);
   // P := FqCartesianProductProcess(Fq, npos);
   return ModifyProcess(P, f);
 end intrinsic;
