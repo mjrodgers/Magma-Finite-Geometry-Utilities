@@ -469,7 +469,7 @@ function _Fq_cart_product_process_ExtractLabel(p)
 end function;
 
 intrinsic FqCartesianProductProcess(F::FldFin, k::RngIntElt) -> Process
-{Generate k-tuples of integers in {0..M-1}.}
+{Generate k-tuples of integers in 0..M-1}
   requirege k, 0;
   if k eq 0 then
     return CreateProcess([<>]);
