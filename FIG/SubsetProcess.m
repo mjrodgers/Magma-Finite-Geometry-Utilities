@@ -294,7 +294,7 @@ procedure _update_Fq_matrix(~p)
       end if;
       p[1][i,j] *:= alpha;
       if IsOne(p[1][i,j]) then
-        if i eq 1 then
+        if pos eq 1 then
           p[3] := true;
           break;
         end if;
@@ -314,7 +314,7 @@ procedure _update_Fp_matrix(~p)
     for pos in [#p[2]..1 by -1] do
       i, j := Explode(p[2][pos]);
       if IsZero(p[1][i,j]) then
-        if i eq 1 then
+        if pos eq 1 then
           p[3] := true;
           break;
         end if;
