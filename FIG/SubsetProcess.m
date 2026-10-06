@@ -290,7 +290,7 @@ procedure _update_Fq_matrix(~p)
       break;
     end if;
     p[1][i,j] *:= alpha;
-    if IsOne(M[i,j]) then
+    if IsOne(p[1][i,j]) then
       if i eq 1 then
         p[3] := true;
         break;
