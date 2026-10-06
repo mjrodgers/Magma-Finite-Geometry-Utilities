@@ -324,7 +324,7 @@ end function;
 function _Fp_echelon_subprocess_ExtractLabel(p)
   label := 1;
   pow := 1;
-  q := #CoefficientField(p[1]);
+  q := #CoefficientRing(p[1]);
   for pos in [#p[2]..1 by -1] do
     i, j := Explode(p[2][pos]);
     if not IsZero(p[1][i,j]) then
@@ -338,7 +338,7 @@ end function;
 function _Fq_echelon_subprocess_ExtractLabel(p)
   label := 1;
   pow := 1;
-  q := #CoefficientField(p[1]);
+  q := #CoefficientRing(p[1]);
   for pos in [#p[2]..1 by -1] do
     i, j := Explode(p[2][pos]);
     if not IsZero(p[1][i,j]) then
