@@ -241,6 +241,9 @@ function MapFunc(F, n, k, S, values)
   return mat;
 end function;
 
+// function _create_positions(n, k, S)
+//   return [<i,j> : i in [1..k], j]
+
 
 intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
 {Gives a process for iterating through all subspaces of fixed dimension k from U.}
@@ -335,6 +338,22 @@ procedure _Fq_cart_product_process_Next(~p)
   end for;
 end procedure;
 
+procedure _Fp_cart_product_process_Next(~p)
+  z, o := Zero(p[1]), One(p[1]);
+  for i in [#p[2]..1 by -1] do
+    p[2][i] +:=1;
+    if IsZero(p[2][i]) then
+      if i eq 1 then
+        p[3] := true;
+        break;
+      end if;
+      continue;
+    else
+      break;
+    end if;
+  end for;
+end procedure;
+
 function _Fq_cart_product_process_Extract(p)
   return p[2];
 end function;
@@ -362,7 +381,16 @@ intrinsic FqCartesianProductProcess(F::FldFin, k::RngIntElt) -> Process
 
   // info[3] will be an "is_finished" flag
   info := <F, state, false>;
-
+  if IsPrimeField(F) then
+    P := CreateProcess(
+          "GF(" cat IntegerToString(#F) cat ")^" cat IntegerToString(k),
+          info,
+          _Fq_cart_product_process_IsEmpty,
+          _Fp_cart_product_process_Next,
+          _Fq_cart_product_process_Extract,
+          _Fq_cart_product_process_ExtractLabel
+    );
+  end if;
   P := CreateProcess(
         "GF(" cat IntegerToString(#F) cat ")^" cat IntegerToString(k),
         info,
