@@ -110,7 +110,7 @@ intrinsic InternalNextkSubset(~p::Tup)
     b := p[1]-p[2];
     for i in [p[2]..1 by -1] do
         p[3][i] +:= 1;
-        if p[3][1] gt (b+i) then
+        if p[3][i] gt (b+i) then
             continue;
         end if;
         for j in [i+1..p[2]] do
