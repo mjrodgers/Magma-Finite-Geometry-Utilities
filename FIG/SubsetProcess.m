@@ -474,7 +474,7 @@ intrinsic FqCartesianProductProcess(F::FldFin, k::RngIntElt) -> Process
   if k eq 0 then
     return CreateProcess([<>]);
   end if;
-  state := Rep(CartesianPower(f, k));
+  state := Rep(CartesianPower(F, k));
 
   // info[3] will be an "is_finished" flag
   info := <F, state, false>;
