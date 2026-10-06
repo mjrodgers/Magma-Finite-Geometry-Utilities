@@ -284,7 +284,7 @@ procedure _update_Fq_matrix(~p)
   if IsEmpty(p[2]) then
     p[3] := true;
   else
-    F := CoefficientField(p[1]);
+    F := CoefficientRing(p[1]);
     z, o, alpha := Zero(F), One(F), PrimitiveElement(F);
     for pos in [#p[2]..1 by -1] do
       i, j := Explode(p[2][pos]);
