@@ -447,6 +447,8 @@ procedure _Fq_cart_product_process_Next(~p)
       end if;
       p[2][i] := z;
       continue;
+    else
+      break;
     end if;
   end for;
 end procedure;
