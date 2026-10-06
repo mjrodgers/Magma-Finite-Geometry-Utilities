@@ -369,7 +369,7 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
               _update_Fp_matrix,
               _Fq_echelon_subprocess_Extract,
               _Fp_echelon_subprocess_ExtractLabel
-    )
+    );
   end if;
   return CreateProcess(
             "Echelon Matrices",
@@ -377,7 +377,7 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
             _update_Fq_matrix,
             _Fq_echelon_subprocess_Extract,
             _Fq_echelon_subprocess_ExtractLabel
-  )
+  );
 end intrinsic;
 
 // TODO : do PointIterator that just generates normalized vectors
@@ -467,7 +467,7 @@ intrinsic FqCartesianProductProcess(F::FldFin, k::RngIntElt) -> Process
   // info[3] will be an "is_finished" flag
   info := <F, state, false>;
   if IsPrimeField(F) then
-    P := CreateProcess(
+    return CreateProcess(
           "GF(" cat IntegerToString(#F) cat ")^" cat IntegerToString(k),
           info,
           _Fq_cart_product_process_IsEmpty,
@@ -476,7 +476,7 @@ intrinsic FqCartesianProductProcess(F::FldFin, k::RngIntElt) -> Process
           _Fp_cart_product_process_ExtractLabel
     );
   end if;
-  P := CreateProcess(
+  return CreateProcess(
         "GF(" cat IntegerToString(#F) cat ")^" cat IntegerToString(k),
         info,
         _Fq_cart_product_process_IsEmpty,
@@ -484,6 +484,4 @@ intrinsic FqCartesianProductProcess(F::FldFin, k::RngIntElt) -> Process
         _Fq_cart_product_process_Extract,
         _Fq_cart_product_process_ExtractLabel
   );
-
-  return P;
 end intrinsic;
