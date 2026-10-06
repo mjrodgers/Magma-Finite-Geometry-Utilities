@@ -242,7 +242,7 @@ function MapFunc(F, n, k, S, values)
 end function;
 
 function _create_positions(n, k, S)
-  return [<i,j> : i in [1..k], j in [S[i]+1..n] | j notin S];
+  return [<i,j> : j in [S[i]+1..n], i in [1..k] | j notin S];
 end function;
 
 procedure _update_Fq_matrix(~M, pos, ~flag)
