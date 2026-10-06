@@ -437,7 +437,7 @@ procedure _Fq_cart_product_process_Next(~p)
   for i in [#p[2]..1 by -1] do
     if IsZero(p[2][i]) then
       p[2][i] := o;
-      continue;
+      break;
     end if;
     p[2][i] *:= alpha;
     if IsOne(p[2][i]) then
