@@ -281,40 +281,48 @@ end function;
 
 // procedure _update_Fq_matrix(~M, pos, ~flag)
 procedure _update_Fq_matrix(~p)
-  F := CoefficientField(p[1]);
-  z, o, alpha := Zero(F), One(F), PrimitiveElement(F);
-  for pos in [#p[2]..1 by -1] do
-    i, j := Explode(p[2][pos]);
-    if IsZero(p[1][i,j]) then
-      p[1][i,j] := o;
-      break;
-    end if;
-    p[1][i,j] *:= alpha;
-    if IsOne(p[1][i,j]) then
-      if i eq 1 then
-        p[3] := true;
+  if IsEmpty(p[2]) then
+    p[3] := true;
+  else
+    F := CoefficientField(p[1]);
+    z, o, alpha := Zero(F), One(F), PrimitiveElement(F);
+    for pos in [#p[2]..1 by -1] do
+      i, j := Explode(p[2][pos]);
+      if IsZero(p[1][i,j]) then
+        p[1][i,j] := o;
         break;
       end if;
-      p[1][i,j] := z;
-      continue;
-    end if;
-    break;
-  end for;
+      p[1][i,j] *:= alpha;
+      if IsOne(p[1][i,j]) then
+        if i eq 1 then
+          p[3] := true;
+          break;
+        end if;
+        p[1][i,j] := z;
+        continue;
+      end if;
+      break;
+    end for;
+  end if;
 end procedure;
 
 // procedure _update_Fq_matrix(~M, pos, ~flag)
 procedure _update_Fp_matrix(~p)
-  for pos in [#p[2]..1 by -1] do
-    i, j := Explode(p[2][pos]);
-    if IsZero(p[1][i,j]) then
-      if i eq 1 then
-        p[3] := true;
-        break;
+  if IsEmpty(p[2]) then
+    p[3] := true;
+  else
+    for pos in [#p[2]..1 by -1] do
+      i, j := Explode(p[2][pos]);
+      if IsZero(p[1][i,j]) then
+        if i eq 1 then
+          p[3] := true;
+          break;
+        end if;
+        continue;
       end if;
-      continue;
-    end if;
-    break;
-  end for;
+      break;
+    end for;
+  end if;
 end procedure;
 
 function _Fq_echelon_subprocess_Extract(p)
