@@ -363,6 +363,7 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
   if IsPrimeField(Fq) then
     return CreateProcess(
               "Echelon Matrices",
+              info,
               _Fq_echelon_subprocess_IsEmpty,
               _update_Fp_matrix,
               _Fq_echelon_subprocess_Extract,
@@ -371,6 +372,7 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
   end if;
   return CreateProcess(
             "Echelon Matrices",
+            info,
             _Fq_echelon_subprocess_IsEmpty,
             _update_Fq_matrix,
             _Fq_echelon_subprocess_Extract,
