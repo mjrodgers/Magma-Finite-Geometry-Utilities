@@ -195,31 +195,34 @@ end intrinsic;
 // For subspaces:
 
 // Takes an integer Q. returns a sequence of Fq elements.
-function qAry(Q,q)
-  F := FiniteField(q);
-  d := Degree(F);
-  p := #BaseField(F);
+// function qAry(Q,q)
+//   F := FiniteField(q);
+//   d := Degree(F);
+//   p := #BaseField(F);
+//
+//   // Do we want to allow empty sequence as a result?
+//   // if not, we should use a do->until
+//   S := [];
+//   while Q ne 0 do
+//     R  := Q mod p;
+//     Q  := Q div p;
+//     Append(~S,R);
+//   end while;
+//
+//   if (#S mod d) ne 0 then
+//     S cat:= [0 : i in [1..((-#S) mod d)]];
+//   end if;
+//
+//   S2 := [F|];
+//   for i in [1..(#S div d)] do
+//     s2 := S[(i-1)*d + 1 .. i*d];
+//     Append(~S2, F!s2);
+//   end for;
+//   return S2;
+// end function;
 
-  // Do we want to allow empty sequence as a result?
-  // if not, we should use a do->until
-  S := [];
-  while Q ne 0 do
-    R  := Q mod p;
-    Q  := Q div p;
-    Append(~S,R);
-  end while;
 
-  if (#S mod d) ne 0 then
-    S cat:= [0 : i in [1..((-#S) mod d)]];
-  end if;
 
-  S2 := [F|];
-  for i in [1..(#S div d)] do
-    s2 := S[(i-1)*d + 1 .. i*d];
-    Append(~S2, F!s2);
-  end for;
-  return S2;
-end function;
 
 
 function MapFunc(F, n, k, S, values)
@@ -384,51 +387,106 @@ end intrinsic;
 
 
 
-
-
-// Iterates over echelon kxn matrices over Fq with fixed pivot columns S.
-intrinsic InternalSubspaceMatSubProcessIsEmpty(p::Tup) -> BoolElt
-{Returns true iff the transitive group process has passed its last group}
-    return IsEmpty(p[5]);
-end intrinsic;
-
-intrinsic InternalNextSubspaceMatSub(~p::Tup)
-{Moves the subset process tuple p to its next subset}
-  error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
-  Advance(~(p[5]));
-end intrinsic;
-
-intrinsic InternalExtractSubspaceMatSub(p::Tup) -> { }
-{Returns the current subspace of the transitive group process tuple p}
-    error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
-    // p := <Fq, n, k,S, Fq_tup_iter>;
-    return MapFunc(p[1], p[2], p[3], p[4], Current(p[5]));
-end intrinsic;
-
-// TODO : Don't know why/if we need this, but this is obv not implemented
-intrinsic InternalExtractSubspaceMatSubLabel(p::Tup) -> RngIntElt
-{Returns the index of the current subset, along with the parent set.}
-    error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
-    return 0;
-end intrinsic;
+//
+//
+// // Iterates over echelon kxn matrices over Fq with fixed pivot columns S.
+// intrinsic InternalSubspaceMatSubProcessIsEmpty(p::Tup) -> BoolElt
+// {Returns true iff the transitive group process has passed its last group}
+//     return IsEmpty(p[5]);
+// end intrinsic;
+//
+// intrinsic InternalNextSubspaceMatSub(~p::Tup)
+// {Moves the subset process tuple p to its next subset}
+//   error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
+//   Advance(~(p[5]));
+// end intrinsic;
+//
+// intrinsic InternalExtractSubspaceMatSub(p::Tup) -> { }
+// {Returns the current subspace of the transitive group process tuple p}
+//     error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
+//     // p := <Fq, n, k,S, Fq_tup_iter>;
+//     return MapFunc(p[1], p[2], p[3], p[4], Current(p[5]));
+// end intrinsic;
+//
+// // TODO : Don't know why/if we need this, but this is obv not implemented
+// intrinsic InternalExtractSubspaceMatSubLabel(p::Tup) -> RngIntElt
+// {Returns the index of the current subset, along with the parent set.}
+//     error if InternalSubspaceMatSubProcessIsEmpty(p), "Process finished";
+//     return 0;
+// end intrinsic;
 
 intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIndx) -> Process
 {Generate row reduced echelon matrices with fixed set S of pivots.}
   npos := n*k - Binomial(k,2) - &+(S);
-  Fq_elts := [a : a in Fq];
-  Fq_tup_iter := StitchProcesses([CreateProcess(Fq_elts) : i in [1..npos]]);
-  info := <Fq, n, k, S, Fq_tup_iter>;
+  f := func<u | MapFunc(Fq, n, k, S, u)>;
+  P := FqCartesianProductProcess(Fq, npos);
+  return ModifyProcess(P, f);
+end intrinsic;
+
+// TODO : do PointIterator that just generates normalized vectors
+
+
+
+
+function _Fq_cart_product_process_IsEmpty(p)
+  return p[3];
+end function;
+
+procedure _Fq_cart_product_process_Next(~p)
+  z, o, alpha := Zero(p[1]), One(p[1]), PrimitiveElement(p[1]);
+  for i in [#p[2]..1 by -1] do
+    if IsZero(p[2][i]) then
+      p[2][i] := o;
+      continue;
+    end if;
+    p[2][i] *:= alpha;
+    if IsOne(p[2][i]) then
+      if i eq 1 then
+        p[3] := true;
+        break;
+      end if;
+      p[2][i] := z;
+      continue;
+    end if;
+  end for;
+end procedure;
+
+function _Fq_cart_product_process_Extract(p)
+  return p[2];
+end function;
+
+function _Fq_cart_product_process_ExtractLabel(p)
+  label := 1;
+  pow := 1;
+  q := #p[1];
+  for i in [#p[2]..1 by -1] do
+    if not IsZero(p[2][i]) then
+      label +:= pow * (1+Log(p[2][i]));
+    end if;
+    pow *:= q;
+  end for;
+  return label;
+end function;
+
+intrinsic FqCartesianProductProcess(F::FldFin, k::RngIntElt) -> Process
+{Generate k-tuples of integers in {0..M-1}.}
+  requirege k, 0;
+  if k eq 0 then
+    return CreateProcess([<>]);
+  end if;
+  state := Rep(CartesianPower(f, k));
+
+  // info[3] will be an "is_finished" flag
+  info := <F, state, false>;
 
   P := CreateProcess(
-        "Subspace Matrices (subprocess)",
+        "GF(" cat IntegerToString(#F) cat ")^" cat IntegerToString(k),
         info,
-        InternalSubspaceMatSubProcessIsEmpty,
-        InternalNextSubspaceMatSub,
-        InternalExtractSubspaceMatSub,
-        InternalExtractSubspaceMatSubLabel
+        _Fq_cart_product_process_IsEmpty,
+        _Fq_cart_product_process_Next,
+        _Fq_cart_product_process_Extract,
+        _Fq_cart_product_process_ExtractLabel
   );
 
   return P;
 end intrinsic;
-
-// TODO : do PointIterator that just generates normalized vectors
