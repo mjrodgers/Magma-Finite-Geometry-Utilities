@@ -155,10 +155,14 @@ intrinsic SubsetProcess(n::RngIntElt, k::RngIntElt) -> Process
         return CreateProcess([{Integers()| }]);
     elif k eq n then
         return CreateProcess([{i : i in [1..n]}]);
+    elif k eq 1 then
+        return CreateProcess([{i} : i in [1..n]]);
     end if;
 
     state := [Min(k-1, i) : i in [1..k]];
     info := <n, k, state>;
+    InternalNextkSubset(~info);
+
 
     P := CreateProcess(
           "kSubsets",
