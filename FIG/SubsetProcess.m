@@ -337,7 +337,7 @@ function _Fp_echelon_subprocess_ExtractLabel(p)
   for pos in [#p[2]..1 by -1] do
     i, j := Explode(p[2][pos]);
     if not IsZero(p[1][i,j]) then
-      label +:= pow * Integers(p[1][i,j]);
+      label +:= pow * Integers()!p[1][i,j];
     end if;
     pow *:= q;
   end for;
