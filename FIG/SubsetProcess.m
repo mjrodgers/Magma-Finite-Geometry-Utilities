@@ -269,7 +269,7 @@ end intrinsic;
 
 
 
-function _Fq_cart_product_process_IsEmpty(p)
+function _Fq_echelon_subprocess_IsEmpty(p)
   return p[3];
 end function;
 
