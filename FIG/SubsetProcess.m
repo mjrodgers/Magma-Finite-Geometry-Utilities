@@ -152,11 +152,11 @@ intrinsic SubsetProcess(n::RngIntElt, k::RngIntElt) -> Process
   requirerange k, 0, n;
 
     if k eq 0 then
-        return CreateProcess([{Integers()| }]);
+        return CreateProcess([{@ Integers()| @}]);
     elif k eq n then
-        return CreateProcess([{i : i in [1..n]}]);
+        return CreateProcess([{@i : i in [1..n]@}]);
     elif k eq 1 then
-        return CreateProcess([{i} : i in [1..n]]);
+        return CreateProcess([{@i@} : i in [1..n]]);
     end if;
 
     state := [Min(k-1, i) : i in [1..k]];
