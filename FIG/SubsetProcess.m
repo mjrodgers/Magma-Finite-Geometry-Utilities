@@ -313,6 +313,7 @@ procedure _update_Fp_matrix(~p)
   else
     for pos in [#p[2]..1 by -1] do
       i, j := Explode(p[2][pos]);
+      p[1][i,j] +:=1;
       if IsZero(p[1][i,j]) then
         if pos eq 1 then
           p[3] := true;
