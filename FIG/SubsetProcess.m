@@ -354,7 +354,7 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
 {Generate row reduced echelon matrices with fixed set S of pivots.}
   // npos := n*k - Binomial(k,2) - &+(S);
   pos := _create_positions(n,k,S);
-  M := ZeroMatrix(Fq, n, k);
+  M := ZeroMatrix(Fq, k, n);
   for i in [1..k] do
     M[i, S[i]] := One(Fq);
   end for;
