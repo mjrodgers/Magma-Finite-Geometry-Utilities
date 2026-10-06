@@ -327,8 +327,8 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
 {Generate row reduced echelon matrices with fixed set S of pivots.}
   npos := n*k - Binomial(k,2) - &+(S);
   f := func<u | MapFunc(Fq, n, k, S, u)>;
-  P := CreateProcess([v : v in VectorSpace(Fq, npos)]);
-  // P := CreateProcess([t : t in CartesianPower(Fq, npos)]);
+  // P := CreateProcess([v : v in VectorSpace(Fq, npos)]);
+  P := CreateProcess([t : t in CartesianPower(Fq, npos)]);
   // P := FqCartesianProductProcess(Fq, npos);
   return ModifyProcess(P, f);
 end intrinsic;
