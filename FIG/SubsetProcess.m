@@ -304,8 +304,6 @@ end procedure;
 
 // procedure _update_Fq_matrix(~M, pos, ~flag)
 procedure _update_Fp_matrix(~p)
-  F := CoefficientField(p[1]);
-  z, o, alpha := Zero(F), One(F);
   for pos in [#p[2]..1 by -1] do
     i, j := Explode(p[2][pos]);
     if IsZero(p[1][i,j]) then
