@@ -396,105 +396,105 @@ end intrinsic;
 // TODO : do PointIterator that just generates normalized vectors
 
 
-
-
-function _Fq_cart_product_process_IsEmpty(p)
-  return p[3];
-end function;
-
-procedure _Fq_cart_product_process_Next(~p)
-  z, o, alpha := Zero(p[1]), One(p[1]), PrimitiveElement(p[1]);
-  for i in [#p[2]..1 by -1] do
-    if IsZero(p[2][i]) then
-      p[2][i] := o;
-      break;
-    end if;
-    p[2][i] *:= alpha;
-    if IsOne(p[2][i]) then
-      if i eq 1 then
-        p[3] := true;
-        break;
-      end if;
-      p[2][i] := z;
-      continue;
-    else
-      break;
-    end if;
-  end for;
-end procedure;
-
-procedure _Fp_cart_product_process_Next(~p)
-  z, o := Zero(p[1]), One(p[1]);
-  for i in [#p[2]..1 by -1] do
-    p[2][i] +:=1;
-    if IsZero(p[2][i]) then
-      if i eq 1 then
-        p[3] := true;
-        break;
-      end if;
-      continue;
-    else
-      break;
-    end if;
-  end for;
-end procedure;
-
-function _Fq_cart_product_process_Extract(p)
-  return p[2];
-end function;
-
-function _Fp_cart_product_process_ExtractLabel(p)
-  label := 1;
-  pow := 1;
-  q := #p[1];
-  for i in [#p[2]..1 by -1] do
-    if not IsZero(p[2][i]) then
-      label +:= pow * Integers(p[2][i]);
-    end if;
-    pow *:= q;
-  end for;
-  return label;
-end function;
-
-function _Fq_cart_product_process_ExtractLabel(p)
-  label := 1;
-  pow := 1;
-  q := #p[1];
-  for i in [#p[2]..1 by -1] do
-    if not IsZero(p[2][i]) then
-      label +:= pow * (1+Log(p[2][i]));
-    end if;
-    pow *:= q;
-  end for;
-  return label;
-end function;
-
-intrinsic FqCartesianProductProcess(F::FldFin, k::RngIntElt) -> Process
-{Generate k-tuples of integers in 0..M-1}
-  requirege k, 0;
-  if k eq 0 then
-    return CreateProcess([<>]);
-  end if;
-  state := Rep(CartesianPower(F, k));
-
-  // info[3] will be an "is_finished" flag
-  info := <F, state, false>;
-  if IsPrimeField(F) then
-    return CreateProcess(
-          "GF(" cat IntegerToString(#F) cat ")^" cat IntegerToString(k),
-          info,
-          _Fq_cart_product_process_IsEmpty,
-          _Fp_cart_product_process_Next,
-          _Fq_cart_product_process_Extract,
-          _Fp_cart_product_process_ExtractLabel
-    );
-  end if;
-  return CreateProcess(
-        "GF(" cat IntegerToString(#F) cat ")^" cat IntegerToString(k),
-        info,
-        _Fq_cart_product_process_IsEmpty,
-        _Fq_cart_product_process_Next,
-        _Fq_cart_product_process_Extract,
-        _Fq_cart_product_process_ExtractLabel
-  );
-end intrinsic;
+//
+//
+// function _Fq_cart_product_process_IsEmpty(p)
+//   return p[3];
+// end function;
+//
+// procedure _Fq_cart_product_process_Next(~p)
+//   z, o, alpha := Zero(p[1]), One(p[1]), PrimitiveElement(p[1]);
+//   for i in [#p[2]..1 by -1] do
+//     if IsZero(p[2][i]) then
+//       p[2][i] := o;
+//       break;
+//     end if;
+//     p[2][i] *:= alpha;
+//     if IsOne(p[2][i]) then
+//       if i eq 1 then
+//         p[3] := true;
+//         break;
+//       end if;
+//       p[2][i] := z;
+//       continue;
+//     else
+//       break;
+//     end if;
+//   end for;
+// end procedure;
+//
+// procedure _Fp_cart_product_process_Next(~p)
+//   z, o := Zero(p[1]), One(p[1]);
+//   for i in [#p[2]..1 by -1] do
+//     p[2][i] +:=1;
+//     if IsZero(p[2][i]) then
+//       if i eq 1 then
+//         p[3] := true;
+//         break;
+//       end if;
+//       continue;
+//     else
+//       break;
+//     end if;
+//   end for;
+// end procedure;
+//
+// function _Fq_cart_product_process_Extract(p)
+//   return p[2];
+// end function;
+//
+// function _Fp_cart_product_process_ExtractLabel(p)
+//   label := 1;
+//   pow := 1;
+//   q := #p[1];
+//   for i in [#p[2]..1 by -1] do
+//     if not IsZero(p[2][i]) then
+//       label +:= pow * Integers(p[2][i]);
+//     end if;
+//     pow *:= q;
+//   end for;
+//   return label;
+// end function;
+//
+// function _Fq_cart_product_process_ExtractLabel(p)
+//   label := 1;
+//   pow := 1;
+//   q := #p[1];
+//   for i in [#p[2]..1 by -1] do
+//     if not IsZero(p[2][i]) then
+//       label +:= pow * (1+Log(p[2][i]));
+//     end if;
+//     pow *:= q;
+//   end for;
+//   return label;
+// end function;
+//
+// intrinsic FqCartesianProductProcess(F::FldFin, k::RngIntElt) -> Process
+// {Generate k-tuples of integers in 0..M-1}
+//   requirege k, 0;
+//   if k eq 0 then
+//     return CreateProcess([<>]);
+//   end if;
+//   state := Rep(CartesianPower(F, k));
+//
+//   // info[3] will be an "is_finished" flag
+//   info := <F, state, false>;
+//   if IsPrimeField(F) then
+//     return CreateProcess(
+//           "GF(" cat IntegerToString(#F) cat ")^" cat IntegerToString(k),
+//           info,
+//           _Fq_cart_product_process_IsEmpty,
+//           _Fp_cart_product_process_Next,
+//           _Fq_cart_product_process_Extract,
+//           _Fp_cart_product_process_ExtractLabel
+//     );
+//   end if;
+//   return CreateProcess(
+//         "GF(" cat IntegerToString(#F) cat ")^" cat IntegerToString(k),
+//         info,
+//         _Fq_cart_product_process_IsEmpty,
+//         _Fq_cart_product_process_Next,
+//         _Fq_cart_product_process_Extract,
+//         _Fq_cart_product_process_ExtractLabel
+//   );
+// end intrinsic;
