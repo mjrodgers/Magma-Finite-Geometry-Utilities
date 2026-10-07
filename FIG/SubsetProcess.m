@@ -263,25 +263,80 @@ end intrinsic;
 
 
 
+
+
+
+
+
+
+// Generate sequence of Fq values for iterating cleanly
+function _Fq_digit_values(Fq)
+  q := #Fq;
+  a := PrimitiveElement(Fq);
+  vals := [ Zero(Fq) ];
+  vals cat:= [ a^e : e in [0..q-2] ];
+  return vals;
+end function;
+
+
+// Free positions for echelon kxn matrix with pivots given by S.
+// This seems stupid...
+function _free_positions(n, k, S)
+  Is := [];  Js := [];
+  ispiv := [ false : i in [1..n] ];
+  for i in [1..k] do
+    ispiv[Sp[i]] := true;
+  end for;
+  for i->s in S do
+    for j in [s+1..n] do
+      if not ispiv[j] then
+        Append(~Is, i);  Append(~Js, j);
+      end if;
+    end for;
+  end for;
+  return Is, Js;
+end function;
+
+// vs. mine
+function _create_positions(n, k, S)
+  return [<i,j> : j in [s+1..n], i->s in S | j notin S];
+end function;
+
+// Initialize matrix (mine)
+function _echelon_base(Fq, k, n, S)
+  o := One(Fq);
+  return Matrix(Fq, k, n, [<i, s, o> : i->s in S]);
+end function;
+
+
+
+
+
+
+
+
+
+
+// todo: update this
 intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
 {Gives a process for iterating through all subspaces of fixed dimension k from U.}
   requirerange k, 0, n;
-  // pivots := SubsetProcess(n,k);
+
   pivots := [s : s in SubsetProcess(n, k)];
   return ConcatenateProcesses([SubspaceMatSubProcess(Fq, n, k, S) : S in pivots]);
 end intrinsic;
 
 
 
+
+
+
+
+
 function _Fq_echelon_subprocess_IsEmpty(p)
-  return p[3];
+  return p[5];
 end function;
 
-
-// Free positions for echelon kxn matrix with pivots given by S.
-function _create_positions(n, k, S)
-  return [<i,j> : j in [S[i]+1..n], i in [1..k] | j notin S];
-end function;
 
 // procedure _update_Fq_matrix(~M, pos, ~flag)
 procedure _update_Fq_matrix(~p)
@@ -330,66 +385,52 @@ procedure _update_Fp_matrix(~p)
   end if;
 end procedure;
 
-function _Fq_echelon_subprocess_Extract(p)
-  return p[1];
+
+// info := < Fq, Fq_values, Matrix, position_list, values, index_counter, done_flag
+procedure _echelon_advance(~p)
+  q := #Fq;
+  for t->pos in p[4] do
+    d := p[5][t] + 1;
+    i, j := pos[1], pos[2];
+    if d lt q then
+      p[5][t] := d;
+      p[3][i,j] := p[2][d+1];
+      p[6] +:=1;
+      return;
+    end if;
+    p[5][t] := 0;
+    p[3][i,j] := p[2][0];
+  end for;
+  p[7] := true;
+end procedure;
+
+function __echelon_subprocess_Extract(p)
+  return p[2];
 end function;
 
-function _Fp_echelon_subprocess_ExtractLabel(p)
-  label := 1;
-  pow := 1;
-  q := #CoefficientRing(p[1]);
-  for pos in [#p[2]..1 by -1] do
-    i, j := Explode(p[2][pos]);
-    if not IsZero(p[1][i,j]) then
-      label +:= pow * Integers()!p[1][i,j];
-    end if;
-    pow *:= q;
-  end for;
-  return label;
-end function;
-
-function _Fq_echelon_subprocess_ExtractLabel(p)
-  label := 1;
-  pow := 1;
-  q := #CoefficientRing(p[1]);
-  for pos in [#p[2]..1 by -1] do
-    i, j := Explode(p[2][pos]);
-    if not IsZero(p[1][i,j]) then
-      label +:= pow * (1+Log(p[1][i,j]));
-    end if;
-    pow *:= q;
-  end for;
-  return label;
+function _echelon_subprocess_ExtractLabel(p)
+  return p[4];
 end function;
 
 
 intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIndx) -> Process
 {Generate row reduced echelon matrices with fixed set S of pivots.}
+  requirerange k, 0, n;
+  require #S eq k: "The pivot set must have k elements";
   // npos := n*k - Binomial(k,2) - &+(S);
-  pos := _create_positions(n,k,S);
-  M := ZeroMatrix(Fq, k, n);
-  for i in [1..k] do
-    M[i, S[i]] := One(Fq);
-  end for;
-  info := <M, pos, false>;
+  Fq_vals := _Fq_digit_values(Fq);
+  pos := _create_positions(n, k, S);
+  M := _echelon_base(Fq, k, n, S);
+  // info := < Fq, Fq_values, Matrix, position_list, values, index_counter, done_flag
+  info := <Fq, Fq_vals, M, pos, [0 : i in [1..#pos]], 0, false>;
 
-  if IsPrimeField(Fq) then
-    return CreateProcess(
-              "Echelon Matrices",
-              info,
-              _Fq_echelon_subprocess_IsEmpty,
-              _update_Fp_matrix,
-              _Fq_echelon_subprocess_Extract,
-              _Fp_echelon_subprocess_ExtractLabel
-    );
-  end if;
   return CreateProcess(
             "Echelon Matrices",
             info,
-            _Fq_echelon_subprocess_IsEmpty,
-            _update_Fq_matrix,
-            _Fq_echelon_subprocess_Extract,
-            _Fq_echelon_subprocess_ExtractLabel
+            _echelon_IsEmpty,
+            _echelon_Advance,
+            _echelon_subprocess_Extract,
+            _echelon_subprocess_Label
   );
 end intrinsic;
 
