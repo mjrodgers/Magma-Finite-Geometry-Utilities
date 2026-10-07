@@ -387,7 +387,7 @@ end procedure;
 
 
 // info := < Fq, Fq_values, Matrix, position_list, values, index_counter, done_flag
-procedure _echelon_advance(~p)
+procedure _echelon_Advance(~p)
   q := #p[1];
   for t->pos in p[4] do
     d := p[5][t] + 1;
