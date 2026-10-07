@@ -399,7 +399,7 @@ procedure _echelon_Advance(~p)
       return;
     end if;
     p[5][t] := 0;
-    p[3][i,j] := p[2][0];
+    p[3][i,j] := p[2][1];
   end for;
   p[7] := true;
 end procedure;
