@@ -333,7 +333,7 @@ end intrinsic;
 
 
 
-function _Fq_echelon_subprocess_IsEmpty(p)
+function _echelon_IsEmpty(p)
   return p[5];
 end function;
 
@@ -404,7 +404,7 @@ procedure _echelon_advance(~p)
   p[7] := true;
 end procedure;
 
-function __echelon_subprocess_Extract(p)
+function _echelon_subprocess_Extract(p)
   return p[2];
 end function;
 
