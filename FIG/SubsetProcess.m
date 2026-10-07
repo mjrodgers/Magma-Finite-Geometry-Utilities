@@ -408,7 +408,7 @@ function _echelon_subprocess_Extract(p)
   return p[2];
 end function;
 
-function _echelon_subprocess_ExtractLabel(p)
+function _echelon_subprocess_Label(p)
   return p[4];
 end function;
 
