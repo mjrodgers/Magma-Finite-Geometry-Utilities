@@ -303,7 +303,7 @@ intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
   end if;
 
   Sproc := SubsetProcess(n,k);
-  Mproc := SubspaceMatSubProcessNew(Fq, n, k, Current(Sproc));
+  Mproc := SubspaceMatSubProcess(Fq, n, k, Current(Sproc));
   info := <Fq, n, k, Mproc, Sproc, 1, false>;
 
   return CreateProcess(
