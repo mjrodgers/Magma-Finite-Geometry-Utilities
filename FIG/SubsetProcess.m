@@ -263,6 +263,12 @@ end intrinsic;
 
 
 
+// Free positions for echelon kxn matrix with pivots given by S.
+function _create_positions(n, k, S)
+  return [<i,j> : j in [S[i]+1..n], i in [1..k] | j notin S];
+end function;
+
+
 function _echelon_IsEmpty(p)
   return p[7];
 end function;
@@ -409,10 +415,6 @@ function _Fq_echelon_subprocess_IsEmpty(p)
 end function;
 
 
-// Free positions for echelon kxn matrix with pivots given by S.
-function _create_positions(n, k, S)
-  return [<i,j> : j in [S[i]+1..n], i in [1..k] | j notin S];
-end function;
 
 // procedure _update_Fq_matrix(~M, pos, ~flag)
 procedure _update_Fq_matrix(~p)
