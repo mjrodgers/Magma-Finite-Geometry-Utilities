@@ -334,7 +334,7 @@ end intrinsic;
 
 
 function _echelon_IsEmpty(p)
-  return p[5];
+  return p[7];
 end function;
 
 
@@ -405,11 +405,11 @@ procedure _echelon_Advance(~p)
 end procedure;
 
 function _echelon_subprocess_Extract(p)
-  return p[2];
+  return p[3];
 end function;
 
 function _echelon_subprocess_Label(p)
-  return p[4];
+  return p[6];
 end function;
 
 
