@@ -281,7 +281,7 @@ procedure _echelon_q_Advance(~p)
         break;
       end if;
       p[4][i,j] *:= PrimitiveElement(p[1]);
-      if IsOne(M[i,j]) then
+      if IsOne(p[4][i,j]) then
         if t eq L then
           rollover := true;
           break;
