@@ -331,7 +331,7 @@ procedure _echelon_Advance(~p)
       return;
     end if;
     // Need to reinitialize the MatrixSubprocess
-    p[4] := SubspaceMatSubProcess(p[1], p[2], p[3], Current(p[5])));
+    p[4] := SubspaceMatSubProcess(p[1], p[2], p[3], Current(p[5]));
   end if;
   p[6] +:=1;
 end procedure;
