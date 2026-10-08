@@ -290,15 +290,15 @@ procedure _update_Fq_matrix(~p)
   else
     F := CoefficientRing(p[1]);
     z, o, alpha := Zero(F), One(F), PrimitiveElement(F);
-    for pos in [#p[2]..1 by -1] do
-      i, j := Explode(p[2][pos]);
+    for t->pos in p[2] do
+      i, j := Explode(pos);
       if IsZero(p[1][i,j]) then
         p[1][i,j] := o;
         break;
       end if;
       p[1][i,j] *:= alpha;
       if IsOne(p[1][i,j]) then
-        if pos eq 1 then
+        if t eq 1 then
           p[3] := true;
           break;
         end if;
@@ -315,11 +315,11 @@ procedure _update_Fp_matrix(~p)
   if IsEmpty(p[2]) then
     p[3] := true;
   else
-    for pos in [#p[2]..1 by -1] do
-      i, j := Explode(p[2][pos]);
+    for t->pos in p[2] do
+      i, j := Explode(pos);
       p[1][i,j] +:=1;
       if IsZero(p[1][i,j]) then
-        if pos eq 1 then
+        if t eq 1 then
           p[3] := true;
           break;
         end if;
