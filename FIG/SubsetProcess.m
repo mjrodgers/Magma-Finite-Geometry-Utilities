@@ -270,7 +270,7 @@ end function;
 
 
 function _echelon_IsEmpty(p)
-  return p[7];
+  return p[8];
 end function;
 
 // info := <Fq, n, k, M, positions, SProcess, counter, done_flag>;
@@ -363,11 +363,11 @@ end procedure;
 // end procedure;
 
 function _echelon_Extract(p)
-  return Current(p[4]);
+  return p[4];
 end function;
 
 function _echelon_Label(p)
-  return p[6];
+  return p[7];
 end function;
 
 
