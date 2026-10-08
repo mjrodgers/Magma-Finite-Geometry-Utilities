@@ -382,7 +382,7 @@ intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
   end if;
 
   Sproc := SubsetProcess(n,k);
-  S := Current(SProcess);
+  S := Current(SProc);
   positions := _create_positions(n, k, S);
   M := Matrix(Fq, k, n, [<i, S[i], One(Fq)> : i in [1..k]]);
   info := <Fq, n, k, M, positions, Sproc, 1, false>;
