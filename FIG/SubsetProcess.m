@@ -356,7 +356,7 @@ intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
   end if;
 
   Sproc := SubsetProcess(n,k);
-  Mproc := SubspaceMatSubProcess(Fq, n, k, Current(Sproc));
+  Mproc := SubspaceMatSubProcessNew(Fq, n, k, Current(Sproc));
   info := <Fq, n, k, Mproc, Sproc, 1, false>;
 
   return CreateProcess(
@@ -429,6 +429,109 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
             _echelon_subprocess_Label
   );
 end intrinsic;
+
+
+
+
+
+//---------------- block-materialised subprocess ----------------
+// info = <Fq, alpha, zero, one, M, Wlo, block, idx, done, His, Jsh>
+//   5:  M     base matrix: pivots + HI free entries, LO entries zero
+//   6:  Wlo   subspace spanned by the LO matrix units (dim c)
+//   7:  block [ M + w : w in Wlo ]   (length q^c)
+//   8:  idx   1-based index into block
+//   10/11:    HI free positions (first m-c of the free positions)
+
+function _block_IsEmpty(p)
+  return p[9];
+end function;
+
+procedure _block_Advance(~p)
+  p[8] +:= 1;
+  if p[8] le #p[7] then
+    return;
+  end if;
+  // block exhausted: advance the HI odometer on M (field elements, as original)
+  alpha := p[2];  z := p[3];  o := p[4];
+  t := #p[10];
+  while t ge 1 do
+    i := p[10][t];
+    j := p[11][t];
+    if IsZero(p[5][i,j]) then
+      p[5][i,j] := o;
+      break;
+    end if;
+    p[5][i,j] *:= alpha;
+    if IsOne(p[5][i,j]) then
+      p[5][i,j] := z;
+      t -:= 1;
+    else
+      break;
+    end if;
+  end while;
+  if t eq 0 then
+    p[9] := true;
+    return;
+  end if;
+  p[7] := [ p[5] + w : w in p[6] ];   // C-level enumeration, one add per matrix
+  p[8] := 1;
+end procedure;
+
+function _block_Extract(p)
+  return p[7][p[8]];
+end function;
+
+function _block_Label(p)
+  return p[8];
+end function;
+
+
+intrinsic SubspaceMatSubProcessNew(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIndx) -> Process
+{RREF k x n matrices over Fq with pivot columns exactly S, in blocks of ~2^12.}
+  requirerange k, 0, n;
+  require #S eq k: "The pivot set must have k elements";
+  q := #Fq;
+  pos := _create_positions(n, k, S);
+
+  // what is this for?
+  m := #pos;
+  c := m;
+  // LO dimension: q^c ~ 2^12
+  while c gt 0 do
+     if q^c * (k*n) le 2^20 then
+       break;
+     end if;   // ~1M entries per block
+    c -:= 1;
+  end while;
+
+
+  MS := KMatrixSpace(Fq, k, n);
+  o := One(Fq);
+  if c eq 0 then
+    Wlo := sub< MS | [ ZeroMatrix(Fq, k, n) ] >;
+  else
+    units := [ Matrix(Fq, k, n, [<pos[t][1], pos[t][2], o>]) : t in [m-c+1..m] ];
+    Wlo := sub< MS | units >;
+  end if;
+
+
+  M := _echelon_base(Fq, k, n, S);
+  His := [ pos[t][1] : t in [1..m-c] ];
+  Jsh := [ pos[t][2] : t in [1..m-c] ];
+  info := <Fq, PrimitiveElement(Fq), Zero(Fq), o, M, Wlo,
+           [ M + w : w in Wlo ], 1, false, His, Jsh>;
+  return CreateProcess(
+          "Echelon Matrices",
+          info,
+          _block_IsEmpty,
+          _block_Advance,
+          _block_Extract,
+          _block_Label);
+end intrinsic;
+
+
+
+
 
 // TODO : do PointIterator that just generates normalized vectors
 
