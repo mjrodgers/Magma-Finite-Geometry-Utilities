@@ -316,14 +316,58 @@ end function;
 
 
 
+function _echelon_IsEmpty(p)
+  return p[7];
+end function;
 
-// todo: update this
+
+// info := <Fq, n, k, MProcess, SProcess, counter, done_flag>;
+procedure _echelon_Advance(~p)
+  Advance(~p[4]);
+  if IsEmpty(p[4]) then
+    Advance(~p[5]);
+    if IsEmpty(p[5]) then
+      p[7] := true;
+      return;
+    end if;
+    // Need to reinitialize the MatrixSubprocess
+    p[4] := SubspaceMatSubProcess(p[1], p[2], p[3], Current(p[5])));
+  end if;
+  p[6] +:=1;
+end procedure;
+
+function _echelon_Extract(p)
+  return Current(p[4]);
+end function;
+
+function _echelon_Label(p)
+  return p[6];
+end function;
+
+
+
 intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
 {Gives a process for iterating through all subspaces of fixed dimension k from U.}
   requirerange k, 0, n;
+  if k eq 0 then
+    return CreateProcess([KMatrixSpace(Fq, k, n)|]);
+  elif k eq n then
+    return CreateProcess([IdentityMatrix(Fq, n)]);
+  end if;
 
-  pivots := [s : s in SubsetProcess(n, k)];
-  return ConcatenateProcesses([SubspaceMatSubProcess(Fq, n, k, S) : S in pivots]);
+  Sproc := SubsetProcess(n,k);
+  Mproc := SubspaceMatSubProcess(Fq, n, k, Current(Sproc));
+  info := <Fq, n, k, Mproc, Sproc, 1, false>;
+
+  return CreateProcess(
+            "Echelon Matrices",
+            info,
+            _echelon_IsEmpty,
+            _echelon_Advance,
+            _echelon_Extract,
+            _echelon_Label
+  );
+
 end intrinsic;
 
 
@@ -333,61 +377,13 @@ end intrinsic;
 
 
 
-function _echelon_IsEmpty(p)
+function _echelon_subprocess_IsEmpty(p)
   return p[7];
 end function;
 
 
-// procedure _update_Fq_matrix(~M, pos, ~flag)
-procedure _update_Fq_matrix(~p)
-  if IsEmpty(p[2]) then
-    p[3] := true;
-  else
-    F := CoefficientRing(p[1]);
-    z, o, alpha := Zero(F), One(F), PrimitiveElement(F);
-    for pos in [#p[2]..1 by -1] do
-      i, j := Explode(p[2][pos]);
-      if IsZero(p[1][i,j]) then
-        p[1][i,j] := o;
-        break;
-      end if;
-      p[1][i,j] *:= alpha;
-      if IsOne(p[1][i,j]) then
-        if pos eq 1 then
-          p[3] := true;
-          break;
-        end if;
-        p[1][i,j] := z;
-        continue;
-      end if;
-      break;
-    end for;
-  end if;
-end procedure;
-
-// procedure _update_Fq_matrix(~M, pos, ~flag)
-procedure _update_Fp_matrix(~p)
-  if IsEmpty(p[2]) then
-    p[3] := true;
-  else
-    for pos in [#p[2]..1 by -1] do
-      i, j := Explode(p[2][pos]);
-      p[1][i,j] +:=1;
-      if IsZero(p[1][i,j]) then
-        if pos eq 1 then
-          p[3] := true;
-          break;
-        end if;
-        continue;
-      end if;
-      break;
-    end for;
-  end if;
-end procedure;
-
-
 // info := < Fq, Fq_values, Matrix, position_list, values, index_counter, done_flag
-procedure _echelon_Advance(~p)
+procedure _echelon_subprocess_Advance(~p)
   q := #p[1];
   for t->pos in p[4] do
     d := p[5][t] + 1;
@@ -422,13 +418,13 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
   pos := _create_positions(n, k, S);
   M := _echelon_base(Fq, k, n, S);
   // info := < Fq, Fq_values, Matrix, position_list, values, index_counter, done_flag
-  info := <Fq, Fq_vals, M, pos, [0 : i in [1..#pos]], 0, false>;
+  info := <Fq, Fq_vals, M, pos, [0 : i in [1..#pos]], 1, false>;
 
   return CreateProcess(
             "Echelon Matrices",
             info,
-            _echelon_IsEmpty,
-            _echelon_Advance,
+            _echelon_subprocess_IsEmpty,
+            _echelon_subprocess_Advance,
             _echelon_subprocess_Extract,
             _echelon_subprocess_Label
   );
