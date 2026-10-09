@@ -229,37 +229,22 @@ end intrinsic;
 
 
 
-function MapFunc(F, n, k, S, values)
-  mat := ZeroMatrix(F, k, n);
-  // values := qAry(F, u);
-  pos := 1;
-  for i in [1..k] do
-    mat[i, S[i]] := 1;
-    for j in [S[i]+1..n] do
-      if j notin S then
-        mat[i,j] := values[pos];
-        pos +:=1;
-      end if;
-    end for;
-  end for;
-  return mat;
-end function;
+// function MapFunc(F, n, k, S, values)
+//   mat := ZeroMatrix(F, k, n);
+//   // values := qAry(F, u);
+//   pos := 1;
+//   for i in [1..k] do
+//     mat[i, S[i]] := 1;
+//     for j in [S[i]+1..n] do
+//       if j notin S then
+//         mat[i,j] := values[pos];
+//         pos +:=1;
+//       end if;
+//     end for;
+//   end for;
+//   return mat;
+// end function;
 
-
-
-intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
-{Gives a process for iterating through all subspaces of fixed dimension k from U.}
-  require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
-  requirerange k, 0, Dimension(U);
-  Fq := CoefficientField(U);
-  n := Dimension(U);
-  B := BasisMatrix(U);
-
-  P := SubspaceMatProcess(Fq, n, k);
-  f := func<M | Image(M*B)>;
-
-  return ModifyProcess(P, f);
-end intrinsic;
 
 
 
@@ -267,146 +252,6 @@ end intrinsic;
 function _create_positions(n, k, S)
   return [<i,j> : j in [S[i]+1..n], i in [1..k] | j notin S];
 end function;
-
-
-function _echelon_IsEmpty(p)
-  return p[8];
-end function;
-
-// info := <Fq, n, k, M, positions, SProcess, counter, done_flag>;
-procedure _echelon_q_Advance(~p)
-  L := #p[5];
-  if L eq 0 then
-    rollover := true;
-  else
-    rollover := false;
-    for t->pos in p[5] do
-      i,j := Explode(pos);
-      if IsZero(p[4][i,j]) then
-        p[4][i,j] := One(p[1]);
-        break;
-      end if;
-      p[4][i,j] *:= PrimitiveElement(p[1]);
-      if IsOne(p[4][i,j]) then
-        if t eq L then
-          rollover := true;
-          break;
-        end if;
-        p[4][i,j] := Zero(p[1]);
-        continue;
-      end if;
-      break;
-    end for;
-  end if;
-
-  if rollover then
-    Advance(~p[6]);
-    if IsEmpty(p[6]) then
-      p[8] := true;
-      return;
-    end if;
-    S := Current(p[6]);
-    p[5] := _create_positions(p[2], p[3], S);
-    p[4] := Matrix(p[1], p[3], p[2], [<i, S[i], One(p[1])> : i in [1..p[3]]]);
-  end if;
-  p[7] +:=1;
-end procedure;
-
-
-// info := <Fq, n, k, M, positions, SProcess, counter, done_flag>;
-procedure _echelon_p_Advance(~p)
-  L := #p[5];
-  if IsZero(L) then
-    rollover := true;
-  else
-    rollover := false;
-    for t->pos in p[5] do
-      i,j := Explode(pos);
-      p[4][i,j] +:=1;
-      if IsZero(p[4][i,j]) then
-        if t eq L then
-          rollover := true;
-          break;
-        end if;
-        continue;
-      end if;
-      break;
-    end for;
-  end if;
-
-  if rollover then
-    Advance(~p[6]);
-    if IsEmpty(p[6]) then
-      p[8] := true;
-      return;
-    end if;
-    S := Current(p[6]);
-    p[5] := _create_positions(p[2], p[3], S);
-    p[4] := Matrix(p[1], p[3], p[2], [<i, S[i], One(p[1])> : i in [1..p[3]]]);
-  end if;
-  p[7] +:=1;
-end procedure;
-//
-//
-//
-//   Advance(~p[4]);
-//   if IsEmpty(p[4]) then
-//     Advance(~p[5]);
-//     if IsEmpty(p[5]) then
-//       p[7] := true;
-//       return;
-//     end if;
-//     // Need to reinitialize the MatrixSubprocess
-//     p[4] := SubspaceMatSubProcess(p[1], p[2], p[3], Current(p[5]));
-//   end if;
-//   p[6] +:=1;
-// end procedure;
-
-function _echelon_Extract(p)
-  return p[4];
-end function;
-
-function _echelon_Label(p)
-  return p[7];
-end function;
-
-
-// info := <Fq, n, k, M, positions, SProcess, counter, done_flag>;
-intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
-{Gives a process for iterating through all subspaces of fixed dimension k from U.}
-  requirerange k, 0, n;
-  if k eq 0 then
-    return CreateProcess([ZeroMatrix(Fq, k, n)]);
-  elif k eq n then
-    return CreateProcess([IdentityMatrix(Fq, n)]);
-  end if;
-
-  Sproc := SubsetProcess(n,k);
-  S := Current(Sproc);
-  positions := _create_positions(n, k, S);
-  M := Matrix(Fq, k, n, [<i, S[i], One(Fq)> : i in [1..k]]);
-  info := <Fq, n, k, M, positions, Sproc, 1, false>;
-
-  if IsPrimeField(Fq) then
-    return CreateProcess(
-              "Echelon Matrices",
-              info,
-              _echelon_IsEmpty,
-              _echelon_p_Advance,
-              _echelon_Extract,
-              _echelon_Label
-    );
-  end if;
-  return CreateProcess(
-            "Echelon Matrices",
-            info,
-            _echelon_IsEmpty,
-            _echelon_q_Advance,
-            _echelon_Extract,
-            _echelon_Label
-  );
-end intrinsic;
-
 
 
 
@@ -527,6 +372,147 @@ intrinsic SubspaceMatSubProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt, S::SetIn
             _Fq_echelon_subprocess_ExtractLabel
   );
 end intrinsic;
+
+
+
+
+function _echelon_IsEmpty(p)
+  return p[8];
+end function;
+
+// info := <Fq, n, k, M, positions, SProcess, counter, done_flag>;
+procedure _echelon_q_Advance(~p)
+  L := #p[5];
+  if L eq 0 then
+    rollover := true;
+  else
+    rollover := false;
+    for t->pos in p[5] do
+      i,j := Explode(pos);
+      if IsZero(p[4][i,j]) then
+        p[4][i,j] := One(p[1]);
+        break;
+      end if;
+      p[4][i,j] *:= PrimitiveElement(p[1]);
+      if IsOne(p[4][i,j]) then
+        if t eq L then
+          rollover := true;
+          break;
+        end if;
+        p[4][i,j] := Zero(p[1]);
+        continue;
+      end if;
+      break;
+    end for;
+  end if;
+
+  if rollover then
+    Advance(~p[6]);
+    if IsEmpty(p[6]) then
+      p[8] := true;
+      return;
+    end if;
+    S := Current(p[6]);
+    p[5] := _create_positions(p[2], p[3], S);
+    p[4] := Matrix(p[1], p[3], p[2], [<i, S[i], One(p[1])> : i in [1..p[3]]]);
+  end if;
+  p[7] +:=1;
+end procedure;
+
+
+// info := <Fq, n, k, M, positions, SProcess, counter, done_flag>;
+procedure _echelon_p_Advance(~p)
+  L := #p[5];
+  if IsZero(L) then
+    rollover := true;
+  else
+    rollover := false;
+    for t->pos in p[5] do
+      i,j := Explode(pos);
+      p[4][i,j] +:=1;
+      if IsZero(p[4][i,j]) then
+        if t eq L then
+          rollover := true;
+          break;
+        end if;
+        continue;
+      end if;
+      break;
+    end for;
+  end if;
+
+  if rollover then
+    Advance(~p[6]);
+    if IsEmpty(p[6]) then
+      p[8] := true;
+      return;
+    end if;
+    S := Current(p[6]);
+    p[5] := _create_positions(p[2], p[3], S);
+    p[4] := Matrix(p[1], p[3], p[2], [<i, S[i], One(p[1])> : i in [1..p[3]]]);
+  end if;
+  p[7] +:=1;
+end procedure;
+
+function _echelon_Extract(p)
+  return p[4];
+end function;
+
+function _echelon_Label(p)
+  return p[7];
+end function;
+
+
+// info := <Fq, n, k, M, positions, SProcess, counter, done_flag>;
+intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
+{Gives a process for iterating through all subspaces of fixed dimension k from U.}
+  requirerange k, 0, n;
+  if k eq 0 then
+    return CreateProcess([ZeroMatrix(Fq, k, n)]);
+  elif k eq n then
+    return CreateProcess([IdentityMatrix(Fq, n)]);
+  end if;
+
+  Sproc := SubsetProcess(n,k);
+  S := Current(Sproc);
+  positions := _create_positions(n, k, S);
+  M := Matrix(Fq, k, n, [<i, S[i], One(Fq)> : i in [1..k]]);
+  info := <Fq, n, k, M, positions, Sproc, 1, false>;
+
+  if IsPrimeField(Fq) then
+    return CreateProcess(
+              "Echelon Matrices",
+              info,
+              _echelon_IsEmpty,
+              _echelon_p_Advance,
+              _echelon_Extract,
+              _echelon_Label
+    );
+  end if;
+  return CreateProcess(
+            "Echelon Matrices",
+            info,
+            _echelon_IsEmpty,
+            _echelon_q_Advance,
+            _echelon_Extract,
+            _echelon_Label
+  );
+end intrinsic;
+
+intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
+{Gives a process for iterating through all subspaces of fixed dimension k from U.}
+  require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
+  requirerange k, 0, Dimension(U);
+  Fq := CoefficientField(U);
+  n := Dimension(U);
+  B := BasisMatrix(U);
+
+  P := SubspaceMatProcess(Fq, n, k);
+  f := func<M | Image(M*B)>;
+
+  return ModifyProcess(P, f);
+end intrinsic;
+
 
 // TODO : do PointIterator that just generates normalized vectors
 
