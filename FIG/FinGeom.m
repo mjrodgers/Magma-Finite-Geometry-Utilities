@@ -19,7 +19,6 @@ end intrinsic;
 intrinsic LineSubs(U::ModTupFld) -> { }
 { Returns the set of 2-dimensional subspaces of U. }
 require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
-  F  := BaseField(U);
   B  := Basis(U);
   n  := Dimension(U);
   LS := &join{ {sub<U | B[i]+u, B[j]+v>
