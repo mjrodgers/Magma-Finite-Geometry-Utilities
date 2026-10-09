@@ -514,9 +514,9 @@ intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
   Fq := CoefficientField(U);
   n := Dimension(U);
   if k eq 0 then
-    return CreateProcess([ZeroMatrix(Fq, k, n)]);
+    return CreateProcess([sub<U|>]);
   elif k eq n then
-    return CreateProcess([IdentityMatrix(Fq, n)]);
+    return CreateProcess([U]);
   end if;
 
   Sproc := SubsetProcess(n,k);
