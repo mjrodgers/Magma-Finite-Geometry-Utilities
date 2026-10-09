@@ -499,18 +499,48 @@ intrinsic SubspaceMatProcess(Fq::FldFin, n::RngIntElt, k::RngIntElt) -> Process
   );
 end intrinsic;
 
+
+
+function _subspace_Extract(p)
+  return Image(p[4]*p[9]);
+end function;
+
+
+
 intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
 {Gives a process for iterating through all subspaces of fixed dimension k from U.}
   require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
-  requirerange k, 0, Dimension(U);
-  Fq := CoefficientField(U);
-  n := Dimension(U);
-  B := BasisMatrix(U);
+  requirerange k, 0, n;
+  if k eq 0 then
+    return CreateProcess([ZeroMatrix(Fq, k, n)]);
+  elif k eq n then
+    return CreateProcess([IdentityMatrix(Fq, n)]);
+  end if;
 
-  P := SubspaceMatProcess(Fq, n, k);
-  f := func<M | Image(M*B)>;
+  Sproc := SubsetProcess(n,k);
+  S := Current(Sproc);
+  positions := _create_positions(n, k, S);
+  M := Matrix(Fq, k, n, [<i, S[i], One(Fq)> : i in [1..k]]);
+  info := <Fq, n, k, M, positions, Sproc, 1, false, BasisMatrix(U) >;
 
-  return ModifyProcess(P, f);
+  if IsPrimeField(Fq) then
+    return CreateProcess(
+              "Subspaces",
+              info,
+              _echelon_IsEmpty,
+              _echelon_p_Advance,
+              _subspace_Extract,
+              _echelon_Label
+    );
+  end if;
+  return CreateProcess(
+            "Subspaces",
+            info,
+            _echelon_IsEmpty,
+            _echelon_q_Advance,
+            _subspace_Extract,
+            _echelon_Label
+  );
 end intrinsic;
 
 
