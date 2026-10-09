@@ -510,7 +510,9 @@ end function;
 intrinsic SubspaceProcess(U::ModTupFld, k::RngIntElt) -> Process
 {Gives a process for iterating through all subspaces of fixed dimension k from U.}
   require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
-  requirerange k, 0, n;
+  requirerange k, 0, Dimension(U);
+  Fq := CoefficientField(U);
+  n := Dimension(U);
   if k eq 0 then
     return CreateProcess([ZeroMatrix(Fq, k, n)]);
   elif k eq n then
