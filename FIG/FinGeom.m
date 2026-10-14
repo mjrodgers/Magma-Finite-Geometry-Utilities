@@ -28,3 +28,10 @@ require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
 
   return LS;
 end intrinsic;
+// NOTE to loop over LineSubs in code:
+/************************************
+for j in [n..2 by -1], v in sub<U| {B[r] : r in [j+1..n]}>, i in [1..j-1], u in sub<U| {B[r] : r in [i+1..n] | r ne j}> do
+  ell := sub<U | B[i]+u, B[j]+v>;
+  ...
+end for;
+*************************************/
