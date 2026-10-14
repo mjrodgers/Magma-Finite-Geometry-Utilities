@@ -6,13 +6,14 @@ freeze;
 // Methods for generating sets corresponding to points and lines
 // of a projective space.
 
+// TODO : avoid these &join constructors, one pure set constructor or loop with `Include(~)`
+
 intrinsic Points(U::ModTupFld) -> SetEnum[ModTupFldElt]
 { Return the set of normalized vectors in U. }
 require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
   B := Basis(U);
   n := #B;
-  return &join{ {B[i] + u : u in sub<U| {B[r] : r in [i+1..n]}>}
-                : i in [1..n] };
+  return {B[i] + u : u in sub<U| {B[r] : r in [i+1..n]}>, i in [1..n] };
 end intrinsic;
 
 
@@ -21,9 +22,9 @@ intrinsic LineSubs(U::ModTupFld) -> { }
 require IsFinite(CoefficientField(U)): "Coefficient field must be finite.";
   B  := Basis(U);
   n  := Dimension(U);
-  LS := &join{ {sub<U | B[i]+u, B[j]+v>
-                        : u in sub<U| {B[r] : r in [i+1..n] | r ne j}>,
-                          v in sub<U| {B[r] : r in [j+1..n]}>
-               } : j in [i+1..n], i in [1..(n-1)] };
+  LS := {sub<U | B[i]+u, B[j]+v>
+                       : u in sub<U| {B[r] : r in [i+1..n] | r ne j}>, i in [1..j-1],
+                         v in sub<U| {B[r] : r in [j+1..n]}>, j in [n..2 by -1]};
+
   return LS;
 end intrinsic;
