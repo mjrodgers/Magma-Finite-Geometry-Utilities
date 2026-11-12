@@ -59,7 +59,7 @@ intrinsic ColumnStabilizer(M::Matrix
 { Takes a matrix with k columns,
 returns the column representation of the
 matrices automorphism group
-(as a subgroup of SYm(k)).}
+(as a subgroup of Sym(k)).}
   RNG := CoefficientRing(M);
   MGRP, _, proj := DirectProduct([Sym(1), Sym(Nrows(M)), Sym(1), Sym(Ncols(M))]);
   A := HorizontalJoin(Transpose(Matrix(RNG, [[-1] cat RSTRCT[1]])),
