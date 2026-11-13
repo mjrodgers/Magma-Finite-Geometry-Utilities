@@ -47,6 +47,11 @@ intrinsic ColumnStabilizer(S::SeqEnum) -> GrpPerm
     return G;
 end intrinsic;
 
+intrinsic ColumnStabilizer(S::ModTupRngElt) -> GrpPerm
+{ Takes a vector of length k, returns the subgroup of Sym(k) leaving it invariant. }
+    return ColumnStabilizer(Eltseq(S));
+end intrinsic;
+
 intrinsic ColumnStabilizer(S::ModTupFldElt) -> GrpPerm
 { Takes a vector of length k, returns the subgroup of Sym(k) leaving that sequence invariant.}
     return ColumnStabilizer(Eltseq(S));
@@ -90,7 +95,8 @@ intrinsic ColumnStabilizer(M::Mtrx : RowColours := 0, ColColours := 0, RSTRCT :=
     A := AutomorphismGroup(B);            // border row is point 1, border column is point nr+2
     off := nr + 2;
   end if;
-  return sub< Sym(nc) | [ Sym(nc) | [ (off+j)^g - off : j in [1..nc] ] : g in Generators(A) ] >;
+  G := sub< Sym(nc) | [ Sym(nc) | [ (off+j)^g - off : j in [1..nc] ] : g in Generators(A) ] >;
+  return G;
 end intrinsic;
 
 // NOTE BUG These can be switched back in once a Magma bug is fixed
