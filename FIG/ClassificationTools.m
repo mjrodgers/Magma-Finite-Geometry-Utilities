@@ -136,70 +136,37 @@ end intrinsic;
 
 // The following gives a method to canonically sort a matrix.
 make_graph := function(M, elts, row_colours, r_set, col_colours, c_set)
-  local nr, nc, d, nl, colours, edges, i, j, r, c, Gr, base;
-  nr := Nrows(M);
-  nc := Ncols(M);
-  d := nr + nc;
+  nr := Nrows(M); nc := Ncols(M); d := nr + nc;
   nl := Ilog(2, #elts);
-  if 2^nl lt #elts then
-    nl +:= 1;
-  end if;
-  if d*nl ge 2^30 then
-    error "Problem too large for graph construction";
-  end if;
-  assert 2^nl ge #elts;
+  if 2^nl lt #elts then nl +:= 1; end if;
+  if d*nl ge 2^30 then error "Problem too large for graph construction"; end if;
   if row_colours cmpeq 0 then
-    row_colours := [1: i in [1..nr]];
-    base := 1;
+    row_colours := [1 : i in [1..nr]];  base := 1;
   else
     assert #row_colours eq nr;
-    row_colours := [Index(r_set, i) : i in row_colours];
-    base := #r_set;
+    row_colours := [Index(r_set, i) : i in row_colours];  base := #r_set;
   end if;
   if col_colours cmpeq 0 then
-  	col_colours := [base+1: i in [1..nc]];
-  	ncolours := base + 1;
+    col_colours := [base+1 : i in [1..nc]];  ncolours := base + 1;
   else
     assert #col_colours eq nc;
-    col_colours := [base+Index(c_set, i) : i in col_colours];
-    ncolours := base + #c_set;
+    col_colours := [base + Index(c_set, i) : i in col_colours];  ncolours := base + #c_set;
   end if;
   colours := row_colours cat col_colours;
-  /* build up the edge set */
-  edges := {};
-  /* vertical edges */
-  base :=0;
-  for i :=0 to nl-2 do
-    for j := 1 to d do
-      Include(~edges, {base+j, base+j+d});
-    end for;
-    base +:=d;
+  codes := [ Index(elts, x) - 1 : x in Eltseq(M) ];              // row-major
+  N := nl*d;
+  A := ZeroMatrix(Integers(), N, N);
+  Id := IdentityMatrix(Integers(), d);
+  for b in [0..nl-1] do
+    Bb := Matrix(Integers(), nr, nc, [ ShiftRight(k, b) mod 2 : k in codes ]);
+    InsertBlock(~A, Bb, b*d + 1, b*d + nr + 1);                  // layer b: rows x columns
+    InsertBlock(~A, Transpose(Bb), b*d + nr + 1, b*d + 1);
+    if b lt nl - 1 then                                          // vertex j of layer b ~ vertex j of layer b+1
+      InsertBlock(~A, Id, b*d + 1, (b+1)*d + 1);
+      InsertBlock(~A, Id, (b+1)*d + 1, b*d + 1);
+    end if;
   end for;
-  /*
-  for i := 0 to nl-2 do
-    for j := 1 to d do
-      Include(~edges, { i*d+j, (i+1)*d+j} );
-    end for;
-  end for;
-   */
-  /* horizontal edges */
-  for r := 1 to nr do
-    for c := 1 to nc do
-      e := Index(elts, M[r,c]) -1;
-      base := 0;
-      while e gt 0 do
-        if IsOdd(e) then
-          Include(~edges, { base + r, base + nr + c} );
-        end if;
-        e := ShiftRight(e,1);
-        base +:= d;
-      end while;
-    end for;
-  end for;
-  /* Set vertex labels to keep vertices at each level separate,
-   * and to keep rows and columns separate.
-   */
-  Gr := Graph< nl*d | edges >;
+  Gr := Graph< N | MatrixRing(Integers(), N)!A >;
   labs := &cat [ [j + i*ncolours : j in colours] : i in [0..nl-1]];
   AssignVertexLabels(~Gr, labs);
   return Gr, labs;
@@ -208,38 +175,21 @@ end function;
 // Okay, so we have a layered graph corresponding to an edge colored graph.
 // We need to recover the number of layers so we can determine edge colors.
 graph_to_matrix := function(Gr, elts, nr, nc)
-  local d, nl, V, M, i, rows, cols, r,c, base;
-  V := VertexSet(Gr);
   nl := Ilog(2, #elts);
-  if 2^nl lt #elts then
-    nl +:= 1;
-  end if;
-  d := nr+nc;
-  assert #V eq d*nl;
-  //nr := Minimum({(Index(v) -1) mod d : v in &join{Neighbors(V.(d*i+1)) : i in [0..nl-1]}} diff {0});
-  //nc := d - nr;
-  /*
-  rows := [[r] : r in [1..nr]];
-  cols := [[c] : c in [1..nc]];
-  base := 0;
-  for i in [1..nl-1] do
-    base +:= d;
-    for r in rows do
-      Include(~r, )
-  */
-  rows := [ [ V.(d*base+s) : base in [0..nl-1]
-                | exists(s){s : s in [1..nr]
-                      | (base eq 0 and r eq s) or (base ne 0 and Self(base) adj V.(d*base+s)) } ]
-            : r in [1..nr] ];
-  cols := [ [ V.(d*base +nr + s) : base in [0..nl-1]
-                | exists(s){s : s in [1..nc]
-                      | (base eq 0 and nr+c eq nr+s) or (base ne 0 and Self(base) adj V.(d*base +nr + s)) } ]
-            : c in [1..nc] ];
-  M := Matrix( [ [ elts[&+{Integers()|
-                       ShiftLeft(1,base-1)
-                         : base in [1..nl] | rows[r][base] adj cols[c][base]
-                     } +1 ]  : c in [1..nc] ] :r in [1..nr] ] );
-  return M;
+  if 2^nl lt #elts then nl +:= 1; end if;
+  d := nr + nc;
+  C := AdjacencyMatrix(Gr);
+  assert Nrows(C) eq d*nl;
+  rho := [1..nr];  sigma := [1..nc];        // index in the current layer of each layer-0 row / column
+  K := Submatrix(C, rho, [nr + y : y in sigma]);
+  w := Matrix(Integers(), d, 1, [1..d]);
+  for b in [1..nl-1] do
+    nxt := Eltseq(Submatrix(C, (b-1)*d + 1, b*d + 1, d, d) * w);   // layer b-1 index -> layer b index
+    rho := [ nxt[x] : x in rho ];
+    sigma := [ nxt[nr + y] - nr : y in sigma ];
+    K +:= 2^b * Submatrix(C, [b*d + x : x in rho], [b*d + nr + y : y in sigma]);
+  end for;
+  return Matrix([ [ elts[k + 1] : k in Eltseq(K[r]) ] : r in [1..nr] ]);
 end function;
 
 /* ---------------- To convert from graph Gr back to matrix M:--------------------
@@ -248,31 +198,43 @@ end function;
  * That can get translated back to an r in [1..#elts],
  * translated again to elts[r]
  */
-intrinsic CanonicalSortedMatrix(M::Mtrx : RowColours := 0, ColColours := 0, Al := "Default") -> Mtrx
-{Returns a canonically sorted matrix, according to the CanonicalGraph intrinsic}
+intrinsic CanonicalSortedMatrix(M::Mtrx : RowColours := 0, ColColours := 0, Labelling := false, Al := "Default") -> Mtrx, SeqEnum, SeqEnum
+{Returns a canonically sorted matrix CM, according to the CanonicalGraph intrinsic.
+ With Labelling := true, also returns integer sequences rp, cp such that
+ row i of CM is row rp[i] of M and column j of CM is column cp[j] of M.}
+  nr := Nrows(M); nc := Ncols(M);
   R := BaseRing(Parent(M));
-
   eset := Seqset(Eltseq(M));
   /* Trivial cases */
   if #eset le 1 then
-    return M;
+    if Labelling then return M, [1..nr], [1..nc]; end if;
+    return M, _, _;
   end if;
   if IsFinite(R) then
-    elts := {@ x : x in R | x in eset @};          // ring enumeration order
+    elts := {@ x : x in R | x in eset @};                  // ring enumeration order
   else
-    elts := {@ x : x in Reverse(Sort(Setseq(eset))) @};   // descending, as before
+    elts := {@ x : x in Reverse(Sort(Setseq(eset))) @};    // descending, as before
   end if;
   r_set := RowColours cmpeq 0 select 0 else {@ c : c in RowColours @};
   c_set := ColColours cmpeq 0 select 0 else {@ c : c in ColColours @};
-  Gr := make_graph(M, elts, RowColours, r_set, ColColours, c_set);
+  Gr, labs := make_graph(M, elts, RowColours, r_set, ColColours, c_set);
   CGr := CanonicalGraph(Gr);
-  CM := graph_to_matrix(CGr, elts, Nrows(M), Ncols(M));
+  CM := graph_to_matrix(CGr, elts, nr, nc);
   if CoefficientRing(CM) ne R then
-    CM := ChangeRing(CM,R);
+    CM := ChangeRing(CM, R);
   end if;
-  return CM;
+  if not Labelling then
+    return CM, _, _;
+  end if;
+  AssignVertexLabels(~CGr, Sort(labs));                    // canonical order is by label value
+  ok, f := IsIsomorphic(Gr, CGr);
+  error if not ok, "CanonicalSortedMatrix: could not recover the canonical labelling.";
+  VG := VertexSet(Gr);
+  rp := [0 : i in [1..nr]];  cp := [0 : j in [1..nc]];
+  for r in [1..nr] do rp[Index(f(VG.r))] := r; end for;
+  for c in [1..nc] do cp[Index(f(VG.(nr + c))) - nr] := c; end for;
+  return CM, rp, cp;
 end intrinsic;
-
 
 /*-------------------------------------------------------------------------
 ---------------------------------------------------------------------------*/
