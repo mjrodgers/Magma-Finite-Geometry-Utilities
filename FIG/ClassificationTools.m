@@ -81,8 +81,7 @@ intrinsic ColumnStabilizer(M::Matrix : RowColours := 0, ColColours := 0, RSTRCT 
   require ColColours cmpeq 0 or #ColColours eq nc: "ColColours must have one entry per column.";
   A := AutomorphismGroup(M : RowColours := _colour_classes(RowColours, nr),
                                ColColours := _colour_classes(ColColours, nc));
-    return sub< Sym(nc) | [ Sym(nc) | [ (nr+j)^g - nr : j in [1..nc] ] : g in Generators(A) ] >;
-  end intrinsic;
+  return sub< Sym(nc) | [ Sym(nc) | [ (nr+j)^g - nr : j in [1..nc] ] : g in Generators(A) ] >;
 end intrinsic;
 
 
@@ -251,7 +250,7 @@ intrinsic RemoveIsomorphic(~MSEQ::SeqEnum[Mtrx]
   REPS := {};
   while i le #MSEQ do
     n := #MSEQ;
-    A := CanonicalSortedMatrix(MSEQ[i] : RowColours := RSTRCT[1], ColColours := RSTRCT[2]);
+    A := CanonicalSortedMatrix(MSEQ[i] : RowColours := RowColours, ColColours := ColColours);
     if A in REPS then
       Remove(~MSEQ, i);
     else
@@ -270,6 +269,6 @@ intrinsic RemoveIsomorphic(~MSET::SetEnum[Mtrx]
   that must be preserved.
 }
   MSEQ := Setseq(MSET);
-  RemoveIsomorphic(~MSEQ: RowColours:=RowColours, ColColours:=ColColours, RSTRCT:=RESTRCT);
+  RemoveIsomorphic(~MSEQ: RowColours:=RowColours, ColColours:=ColColours, RSTRCT:=RSTRCT);
   MSET := Seqset(MSEQ);
 end intrinsic;
