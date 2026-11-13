@@ -74,12 +74,11 @@ intrinsic TDColSumMatrix(M::Mtrx,P1::SeqEnum[SetEnum],P2::SeqEnum[SetEnum]) -> M
 { P1 partitions the rows, P2 partitions the columns, returns column sum matrix }
   R := CoefficientRing(M);
   V := RSpace(R, Nrows(M));
-  CSelMat := Matrix(R, Ncols(M), #P2, [<Rep(P2[i]), i, 1> : i in [1..#P2]]);
-  CSumMat := Matrix([CharacteristicVector(V,r) : r in P1]);
-  return CSumMat*(M*CSelMat),
-          hom< RSpace(R, #P1) -> V | [v*CSumMat : v in Basis(RSpace(R, #P1))]>;
+  W := RSpace(R, #P2);
+  X := Submatrix(M, [1..Nrows(M)], [Rep(c) : c in P2]);        // one representative column per class
+  C := Matrix([ &+[ W | X[r] : r in cls ] : cls in P1 ]);      // add the rows of each row class
+  return C, hom< RSpace(R, #P1) -> V | [CharacteristicVector(V, cls) : cls in P1] >;
 end intrinsic;
-
 
 intrinsic TDColSumMatrix(M::Mtrx,P::SeqEnum[SetEnum]) -> Mtrx, Map
 { For symmetric matrix M, P a partition of rows/columns, returns column sum matrix }
