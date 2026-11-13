@@ -18,7 +18,6 @@ freeze;
     projecting AutomorphismGroup(M) from Sym(m)xSym(n) -> Sym(n).
     Optional parameter RSTRCT allows us to 'color' rows and columns
     to give a fixed partition.
-    TODO: RSTRCT is a bad parameter name, need to replace with RowColors / ColumnColors
   CanonicalSortedMatrix(M)
     Reorders rows and columns of a matrix in a canonical way.
   RemoveIsomorphic(MSET)
@@ -236,8 +235,6 @@ intrinsic RemoveIsomorphic(~MSEQ::SeqEnum[Mtrx]
 {
   Takes a sequence of matrices,
   returns a collection of isomorphism class representatives.
-  Optional argument RSTRCT can be used to give labels on rows/columns
-  that must be preserved.
 }
 
   require RSTRCT cmpeq 0 or (RowColours cmpeq 0 and ColColours cmpeq 0):
@@ -249,7 +246,6 @@ intrinsic RemoveIsomorphic(~MSEQ::SeqEnum[Mtrx]
   i := 1;
   REPS := {};
   while i le #MSEQ do
-    n := #MSEQ;
     A := CanonicalSortedMatrix(MSEQ[i] : RowColours := RowColours, ColColours := ColColours);
     if A in REPS then
       Remove(~MSEQ, i);
@@ -265,8 +261,6 @@ intrinsic RemoveIsomorphic(~MSET::SetEnum[Mtrx]
 {
   Takes a set of matrices,
   returns a collection of isomorphism class representatives.
-  Optional argument RSTRCT can be used to give labels on rows/columns
-  that must be preserved.
 }
   MSEQ := Setseq(MSET);
   RemoveIsomorphic(~MSEQ: RowColours:=RowColours, ColColours:=ColColours, RSTRCT:=RSTRCT);
