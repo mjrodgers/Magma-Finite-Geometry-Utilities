@@ -13,7 +13,7 @@ freeze;
   ColumnStabilizer(S::SeqEnum)
   ColumnStabilizer(S::ModTupFldElt)
     given a sequence or vector S of length n, return the stabilizer in Sym(n);
-  ColumnStabilizer(M::Matrix)
+  ColumnStabilizer(M::Mtrx)
     Given an mxn matrix, return the subgroup of Sym(n) obtained from
     projecting AutomorphismGroup(M) from Sym(m)xSym(n) -> Sym(n).
     Optional parameter RSTRCT allows us to 'color' rows and columns
@@ -64,7 +64,7 @@ end function;
 // RowColours / ColColours are sequences giving a colour for each row / column;
 // only automorphisms preserving the colours are used.
 // RSTRCT := <RowColours, ColColours> is accepted for backward compatibility.
-intrinsic ColumnStabilizer(M::Matrix : RowColours := 0, ColColours := 0, RSTRCT := 0) -> GrpPerm
+intrinsic ColumnStabilizer(M::Mtrx : RowColours := 0, ColColours := 0, RSTRCT := 0) -> GrpPerm
 {
   Takes a matrix with k columns, returns the action on columns of the
   matrix's automorphism group (as a subgroup of Sym(k)).
