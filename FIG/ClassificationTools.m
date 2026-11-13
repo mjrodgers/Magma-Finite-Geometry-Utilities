@@ -260,5 +260,5 @@ intrinsic RemoveIsomorphic(~MSET::SetEnum[Mtrx]
 }
   MSEQ := Setseq(MSET);
   RemoveIsomorphic(~MSEQ: RSTRCT := RSTRCT);
-  MSET := Setseq(MSEQ);
+  MSET := Seqset(MSEQ);
 end intrinsic;
