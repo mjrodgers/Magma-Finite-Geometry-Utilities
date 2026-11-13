@@ -237,7 +237,7 @@ intrinsic RemoveIsomorphic(~MSEQ::SeqEnum[Mtrx]
 }
   i := 1;
   REPS := {};
-  while i lt #MSEQ do
+  while i le #MSEQ do
     n := #MSEQ;
     A := CanonicalSortedMatrix(MSEQ[i] : RowColours := RSTRCT[1], ColColours := RSTRCT[2]);
     if A in REPS then
