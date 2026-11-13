@@ -53,18 +53,36 @@ intrinsic ColumnStabilizer(S::ModTupFldElt) -> GrpPerm
     return ColumnStabilizer(Eltseq(S));
 end intrinsic;
 
-intrinsic ColumnStabilizer(M::Matrix
-                    :  RSTRCT := <[1 : i in [1..Nrows(M)]],
-                                  [1 : i in [1..Ncols(M)]]>) -> GrpPerm
-{ Takes a matrix with k columns,
-returns the column representation of the
-matrices automorphism group
-(as a subgroup of Sym(k)).}
-  RNG := CoefficientRing(M);
-  MGRP, _, proj := DirectProduct([Sym(1), Sym(Nrows(M)), Sym(1), Sym(Ncols(M))]);
-  A := HorizontalJoin(Transpose(Matrix(RNG, [[-1] cat RSTRCT[1]])),
-    VerticalJoin(Matrix(RNG, [RSTRCT[2]]), M));
-  return proj[4](AutomorphismGroup(A));
+
+function _colour_classes(Colours, n)
+  if Colours cmpeq 0 then
+    return [1 : i in [1..n]];
+  end if;
+  cs := {@ c : c in Colours @};
+  return [Index(cs, c) : c in Colours];
+end function;
+
+// RowColours / ColColours are sequences giving a colour for each row / column;
+// only automorphisms preserving the colours are used.
+// RSTRCT := <RowColours, ColColours> is accepted for backward compatibility.
+intrinsic ColumnStabilizer(M::Matrix : RowColours := 0, ColColours := 0, RSTRCT := 0) -> GrpPerm
+{
+  Takes a matrix with k columns, returns the action on columns of the
+  matrix's automorphism group (as a subgroup of Sym(k)).
+}
+  nr := Nrows(M); nc := Ncols(M);
+  require RSTRCT cmpeq 0 or (RowColours cmpeq 0 and ColColours cmpeq 0):
+    "Give either RSTRCT or RowColours/ColColours, not both.";
+  if RSTRCT cmpne 0 then
+    RowColours := RSTRCT[1];
+    ColColours := RSTRCT[2];
+  end if;
+  require RowColours cmpeq 0 or #RowColours eq nr: "RowColours must have one entry per row.";
+  require ColColours cmpeq 0 or #ColColours eq nc: "ColColours must have one entry per column.";
+  A := AutomorphismGroup(M : RowColours := _colour_classes(RowColours, nr),
+                               ColColours := _colour_classes(ColColours, nc));
+    return sub< Sym(nc) | [ Sym(nc) | [ (nr+j)^g - nr : j in [1..nc] ] : g in Generators(A) ] >;
+  end intrinsic;
 end intrinsic;
 
 
@@ -187,29 +205,17 @@ end function;
 intrinsic CanonicalSortedMatrix(M::Mtrx : RowColours := 0, ColColours := 0, Al := "Default") -> Mtrx
 {Returns a canonically sorted matrix, according to the CanonicalGraph intrinsic}
   R := BaseRing(Parent(M));
-  elts := {R|};
-  elts_mset := {*R|*};
-  for i := 1 to Nrows(M) do
-    elts_i := Eltseq(M[i]);
-    elts join:= SequenceToSet(elts_i);
-    elts_mset join:= SequenceToMultiset(elts_i);
-  end for;
+
+  eset := Seqset(Eltseq(M));
   /* Trivial cases */
-  if #elts le 1 then
+  if #eset le 1 then
     return M;
   end if;
-  elts := SetToSequence(elts);
-  //----------------sort_cmp: Modify it here? Or apply a sorting after?
-  /*
-  sort_cmp := function(x,y)
-    return Multiplicity(elts_mset, y) - Multiplicity(elts_mset, x);
-  end function;
-   */
-  sort_cmp := function(x,y)
-    return y-x;
-  end function;
-  Sort(~elts, sort_cmp);
-  elts := {@ x : x in elts @};
+  if IsFinite(R) then
+    elts := {@ x : x in R | x in eset @};          // ring enumeration order
+  else
+    elts := {@ x : x in Reverse(Sort(Setseq(eset))) @};   // descending, as before
+  end if;
   r_set := RowColours cmpeq 0 select 0 else {@ c : c in RowColours @};
   c_set := ColColours cmpeq 0 select 0 else {@ c : c in ColColours @};
   Gr := make_graph(M, elts, RowColours, r_set, ColColours, c_set);
@@ -227,14 +233,20 @@ end intrinsic;
 
 
 intrinsic RemoveIsomorphic(~MSEQ::SeqEnum[Mtrx]
-            : RSTRCT := <[1 : i in [1..Nrows(M)]], [1 : i in [1..Ncols(M)]]
-              where M is Rep(MSEQ)>)
+            : RowColours := 0, ColColours := 0, RSTRCT := 0)
 {
   Takes a sequence of matrices,
   returns a collection of isomorphism class representatives.
   Optional argument RSTRCT can be used to give labels on rows/columns
   that must be preserved.
 }
+
+  require RSTRCT cmpeq 0 or (RowColours cmpeq 0 and ColColours cmpeq 0):
+  "Give either RSTRCT or RowColours/ColColours, not both.";
+  if RSTRCT cmpne 0 then
+    RowColours := RSTRCT[1];
+    ColColours := RSTRCT[2];
+  end if;
   i := 1;
   REPS := {};
   while i le #MSEQ do
@@ -250,8 +262,7 @@ intrinsic RemoveIsomorphic(~MSEQ::SeqEnum[Mtrx]
 end intrinsic;
 
 intrinsic RemoveIsomorphic(~MSET::SetEnum[Mtrx]
-            : RSTRCT := <[1 : i in [1..Nrows(M)]], [1 : i in [1..Ncols(M)]]
-              where M is Rep(MSET)>)
+            : RowColours := 0, ColColours := 0, RSTRCT := 0)
 {
   Takes a set of matrices,
   returns a collection of isomorphism class representatives.
@@ -259,6 +270,6 @@ intrinsic RemoveIsomorphic(~MSET::SetEnum[Mtrx]
   that must be preserved.
 }
   MSEQ := Setseq(MSET);
-  RemoveIsomorphic(~MSEQ: RSTRCT := RSTRCT);
+  RemoveIsomorphic(~MSEQ: RowColours:=RowColours, ColColours:=ColColours, RSTRCT:=RESTRCT);
   MSET := Seqset(MSEQ);
 end intrinsic;
