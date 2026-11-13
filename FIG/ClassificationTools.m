@@ -200,8 +200,9 @@ make_graph := function(M, elts, row_colours, r_set, col_colours, c_set)
    * and to keep rows and columns separate.
    */
   Gr := Graph< nl*d | edges >;
-  AssignVertexLabels(~Gr, &cat [ [j + i*ncolours : j in colours] : i in [0..nl-1]]);
-  return Gr;
+  labs := &cat [ [j + i*ncolours : j in colours] : i in [0..nl-1]];
+  AssignVertexLabels(~Gr, labs);
+  return Gr, labs;
 end function;
 
 // Okay, so we have a layered graph corresponding to an edge colored graph.
