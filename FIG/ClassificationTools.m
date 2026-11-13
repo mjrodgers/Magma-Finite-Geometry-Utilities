@@ -52,23 +52,21 @@ intrinsic ColumnStabilizer(S::ModTupFldElt) -> GrpPerm
     return ColumnStabilizer(Eltseq(S));
 end intrinsic;
 
-
-function _colour_classes(Colours, n)
+// Border entries for a colouring: distinct colours become m, m+1, ...; 0 means one colour.
+function _border_colours(Colours, n, m)
   if Colours cmpeq 0 then
-    return [1 : i in [1..n]];
+    return [m : i in [1..n]];
   end if;
   cs := {@ c : c in Colours @};
-  return [Index(cs, c) : c in Colours];
+  return [m + Index(cs, c) - 1 : c in Colours];
 end function;
 
-// RowColours / ColColours are sequences giving a colour for each row / column;
-// only automorphisms preserving the colours are used.
-// RSTRCT := <RowColours, ColColours> is accepted for backward compatibility.
 intrinsic ColumnStabilizer(M::Mtrx : RowColours := 0, ColColours := 0, RSTRCT := 0) -> GrpPerm
-{
-  Takes a matrix with k columns, returns the action on columns of the
+{ Takes a matrix with k columns, returns the action on columns of the
   matrix's automorphism group (as a subgroup of Sym(k)).
-}
+  RowColours / ColColours are sequences giving a colour for each row / column;
+  only automorphisms preserving the colours are used.
+  RSTRCT := <RowColours, ColColours> is accepted for backward compatibility. }
   nr := Nrows(M); nc := Ncols(M);
   require RSTRCT cmpeq 0 or (RowColours cmpeq 0 and ColColours cmpeq 0):
     "Give either RSTRCT or RowColours/ColColours, not both.";
@@ -78,10 +76,53 @@ intrinsic ColumnStabilizer(M::Mtrx : RowColours := 0, ColColours := 0, RSTRCT :=
   end if;
   require RowColours cmpeq 0 or #RowColours eq nr: "RowColours must have one entry per row.";
   require ColColours cmpeq 0 or #ColColours eq nc: "ColColours must have one entry per column.";
-  A := AutomorphismGroup(M : RowColours := _colour_classes(RowColours, nr),
-                               ColColours := _colour_classes(ColColours, nc));
-  return sub< Sym(nc) | [ Sym(nc) | [ (nr+j)^g - nr : j in [1..nc] ] : g in Generators(A) ] >;
+
+  if RowColours cmpeq 0 and ColColours cmpeq 0 then
+    A := AutomorphismGroup(M);            // rows 1..nr, columns nr+1..nr+nc
+    off := nr;
+  else
+    RNG := CoefficientRing(M);
+    require Type(RNG) in {RngInt, FldRat}:
+      "With colours, the matrix must be over the integers or rationals.";
+    m := Min(Eltseq(M));
+    B := HorizontalJoin(Transpose(Matrix(RNG, [[m - 1] cat _border_colours(RowColours, nr, m)])),
+                        VerticalJoin(Matrix(RNG, [_border_colours(ColColours, nc, m)]), M));
+    A := AutomorphismGroup(B);            // border row is point 1, border column is point nr+2
+    off := nr + 2;
+  end if;
+  return sub< Sym(nc) | [ Sym(nc) | [ (off+j)^g - off : j in [1..nc] ] : g in Generators(A) ] >;
 end intrinsic;
+
+// NOTE BUG These can be switched back in once a Magma bug is fixed
+// function _colour_classes(Colours, n)
+//   if Colours cmpeq 0 then
+//     return [1 : i in [1..n]];
+//   end if;
+//   cs := {@ c : c in Colours @};
+//   return [Index(cs, c) : c in Colours];
+// end function;
+//
+// // RowColours / ColColours are sequences giving a colour for each row / column;
+// // only automorphisms preserving the colours are used.
+// // RSTRCT := <RowColours, ColColours> is accepted for backward compatibility.
+// intrinsic ColumnStabilizer(M::Mtrx : RowColours := 0, ColColours := 0, RSTRCT := 0) -> GrpPerm
+// {
+//   Takes a matrix with k columns, returns the action on columns of the
+//   matrix's automorphism group (as a subgroup of Sym(k)).
+// }
+//   nr := Nrows(M); nc := Ncols(M);
+//   require RSTRCT cmpeq 0 or (RowColours cmpeq 0 and ColColours cmpeq 0):
+//     "Give either RSTRCT or RowColours/ColColours, not both.";
+//   if RSTRCT cmpne 0 then
+//     RowColours := RSTRCT[1];
+//     ColColours := RSTRCT[2];
+//   end if;
+//   require RowColours cmpeq 0 or #RowColours eq nr: "RowColours must have one entry per row.";
+//   require ColColours cmpeq 0 or #ColColours eq nc: "ColColours must have one entry per column.";
+//   A := AutomorphismGroup(M : RowColours := _colour_classes(RowColours, nr),
+//                                ColColours := _colour_classes(ColColours, nc));
+//   return sub< Sym(nc) | [ Sym(nc) | [ (nr+j)^g - nr : j in [1..nc] ] : g in Generators(A) ] >;
+// end intrinsic;
 
 
 /*-------------------------------------------------------------------------
